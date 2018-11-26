@@ -1,5 +1,9 @@
+# builds
+build/
+
 # Prerequisites
 *.d
+*.idea
 
 # Compiled Object files
 *.slo
