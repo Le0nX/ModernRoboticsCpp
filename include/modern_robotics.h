@@ -1,9 +1,10 @@
-#ifndef MODERNROBOTICSCPP_LIBRARY_H
-#define MODERNROBOTICSCPP_LIBRARY_H
+#pragma once
 
 #include <Eigen/Dense>
 #include <vector>
 
+namespace mr {
+    
 /*
  * Function: Find if the value is negligible enough to consider 0
  * Inputs: value to be checked as a double
@@ -120,4 +121,5 @@ Eigen::MatrixXd FKinSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const 
  */
 Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
 
-#endif /* MODERNROBOTICSCPP_LIBRARY_H */
+
+}

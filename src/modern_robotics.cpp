@@ -9,7 +9,8 @@
 #include <cmath>
 #include <vector>
 
-
+namespace mr {
+    
 /* Function: Find if the value is negligible enough to consider 0
  * Inputs: value to be checked as a double
  * Returns: Boolean of true-ignore or false-can't ignore
@@ -224,4 +225,6 @@ Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd& Slist, const Eigen::MatrixX
     }
 
     return Js;
+}
+
 }

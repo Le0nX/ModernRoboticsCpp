@@ -34,3 +34,6 @@ build/
 *.exe
 *.out
 *.app
+
+# VSCode settings
+.vscode/settings.json
