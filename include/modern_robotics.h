@@ -121,5 +121,11 @@ Eigen::MatrixXd FKinSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const 
  */
 Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
 
+/*
+ * Function: Gives the body Jacobian
+ * Inputs: Screw axis in BODY position, joint configuration
+ * Returns: 6xn Bobdy Jacobian
+ */
+Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
 
 }
