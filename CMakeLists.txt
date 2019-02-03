@@ -11,26 +11,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_STANDARD 17)
 
 
-
-
 SET( EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" )
 
-
-if (LINUX)
-    #TODO installation
+message(STATUS "Checking Eigen availability...")
+if (NOT EXISTS ${EIGEN3_INCLUDE_DIR})
+    message(WARNING "Unable to find EIGEN3_INCLUDE_DIR...")
+    message(FATAL_ERROR  "Please set the environment variable like this: export EIGEN3_INCLUDE_DIR=/path/to/eigen3/")
 endif()
 
-
-if (APPLE)
-    # default library path
-    message(STATUS "Checking Eigen availability...")
-    if (NOT EXISTS ${EIGEN3_INCLUDE_DIR})
-        message(WARNING "Unable to find EIGEN3_INCLUDE_DIR...")
-        message(STATUS "Installing Eigen...")
-        # now we need to download the Eigen library
-        execute_process(COMMAND brew install eigen)
-    endif()
-endif()
 
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
