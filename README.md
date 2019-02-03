@@ -51,3 +51,6 @@ foo@bar:~$ make && make install
 ```
 
 ## Using library
+```console
+g++ test.cpp -I../include -L../build -lModernRoboticsCpp
+```
