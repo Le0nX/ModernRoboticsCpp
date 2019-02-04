@@ -52,13 +52,13 @@ foo@bar:~$ make && make install
 
 ## Using library
 ```console
-g++ test.cpp -I../include -L../build -lModernRoboticsCpp
+foo@bar:~$ g++ test.cpp -I../include -L../build -lModernRoboticsCpp
 ```
 If you get something like: 
 ```console
-./a.out: error while loading shared libraries: libModernRoboticsCpp.so: cannot open shared object file: No such file or directory
+foo@bar:~$ ./a.out: error while loading shared libraries: libModernRoboticsCpp.so: cannot open shared object file: No such file or directory
 ```
 Just tell your operating system where the library is:
 ```console
- export LD_LIBRARY_PATH=/path/to/the/library/ModernRoboticsCpp/_install/lib
+foo@bar:~$ export LD_LIBRARY_PATH=/path/to/the/library/ModernRoboticsCpp/_install/lib
  ```
