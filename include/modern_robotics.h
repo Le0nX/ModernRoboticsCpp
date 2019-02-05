@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include <vector>
 
 namespace mr {
@@ -121,6 +121,7 @@ Eigen::MatrixXd FKinSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const 
  */
 Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
 
+
 /*
  * Function: Gives the body Jacobian
  * Inputs: Screw axis in BODY position, joint configuration
@@ -129,3 +130,4 @@ Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
 Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
 
 }
+

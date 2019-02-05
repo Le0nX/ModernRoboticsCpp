@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.5)
 project(ModernRoboticsCpp)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
@@ -8,14 +8,16 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
  set(warnings "/W4 /WX /EHsc")
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 
 SET( EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" )
 
-
-if (LINUX)
-    #TODO installation
+message(STATUS "Checking Eigen availability...")
+if (NOT EXISTS ${EIGEN3_INCLUDE_DIR})
+    message(WARNING "Unable to find EIGEN3_INCLUDE_DIR...")
+    message(FATAL_ERROR  "Please set the environment variable like this: export EIGEN3_INCLUDE_DIR=/path/to/eigen3/")
 endif()
+
 
 
 if (APPLE)
@@ -30,6 +32,7 @@ if (APPLE)
 endif()
 
 find_package (Eigen3 REQUIRED)
+
 
 INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
 
