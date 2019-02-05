@@ -9,7 +9,8 @@
 #include <cmath>
 #include <vector>
 
-
+namespace mr {
+    
 /* Function: Find if the value is negligible enough to consider 0
  * Inputs: value to be checked as a double
  * Returns: Boolean of true-ignore or false-can't ignore
@@ -224,4 +225,24 @@ Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd& Slist, const Eigen::MatrixX
     }
 
     return Js;
+}
+
+/*
+ * Function: Gives the body Jacobian
+ * Inputs: Screw axis in BODY position, joint configuration
+ * Returns: 6xn Bobdy Jacobian
+ */
+Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd& Blist, const Eigen::MatrixXd& thetaList) {
+    Eigen::MatrixXd Jb = Blist;
+    Eigen::MatrixXd T = Eigen::MatrixXd::Identity(4,4);  
+    Eigen::VectorXd bListTemp(Blist.col(0).size());
+    for(int i = thetaList.size()-2; i >= 0; i--) {
+        bListTemp << Blist.col(i+1) * thetaList(i+1);
+        T = T * MatrixExp6(VecTose3(-1*bListTemp));
+        // std::cout << "array: " << sListTemp << std::endl;
+        Jb.col(i) = Adjoint(T) * Blist.col(i);
+    }
+    return Jb;
+}
+
 }
