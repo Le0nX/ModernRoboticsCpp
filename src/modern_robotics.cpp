@@ -5,7 +5,7 @@
  * Adapted from modern_robotics.py provided by modernrobotics.org
  * Provides useful Jacobian and frame representation functions
  */
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include <cmath>
 #include <vector>
 

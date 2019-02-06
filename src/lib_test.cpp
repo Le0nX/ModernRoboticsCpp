@@ -1,5 +1,5 @@
 #include <iostream>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include "../include/modern_robotics.h"
 #include "gtest/gtest.h"
 
