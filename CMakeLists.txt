@@ -35,6 +35,7 @@ find_package (Eigen3 REQUIRED)
 
 if (WIN32)
   SET( EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" )
+  INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
 endif()
 
 # Download and unpack googletest at configure time
