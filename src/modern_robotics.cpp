@@ -19,6 +19,23 @@ bool NearZero(const double val){
     return (std::abs(val) < .000001);
 }
 
+/*
+ * Function: Calculate the 6x6 matrix [adV] of the given 6-vector
+ * Input: Eigen::VectorXd (6x1)
+ * Output: Eigen::MatrixXd (6x6)
+ * Note: Can be used to calculate the Lie bracket [V1, V2] = [adV1]V2
+ */
+Eigen::MatrixXd ad(Eigen::VectorXd V)
+{
+    Eigen::Matrix3d omgmat = VecToso3(Eigen::Vector3d(V(0), V(1), V(2)));
+
+    Eigen::MatrixXd result(6,6);
+    result.topLeftCorner<3,3>() = omgmat;
+    result.topRightCorner<3,3>() = Eigen::Matrix3d::Zero(3,3);
+    result.bottomLeftCorner<3,3>() = VecToso3(Eigen::Vector3d(V(3), V(4), V(5)));
+    result.bottomRightCorner<3,3>() = omgmat;
+    return result;
+}
 
 /* Function: Returns a normalized version of the input vector
  * Input: Eigen::MatrixXd

@@ -10,7 +10,10 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_STANDARD 11)
 
-SET( EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" )
+
+find_package (Eigen3 REQUIRED)
+
+#SET( EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" )
 
 message(STATUS "Checking Eigen availability...")
 if (NOT EXISTS ${EIGEN3_INCLUDE_DIR})
@@ -31,7 +34,6 @@ if (APPLE)
     endif()
 endif()
 
-find_package (Eigen3 REQUIRED)
 
 if (WIN32)
   SET( EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" )
