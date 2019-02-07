@@ -12,16 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 
 find_package (Eigen3 REQUIRED)
-
-#SET( EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" )
-
-message(STATUS "Checking Eigen availability...")
-if (NOT EXISTS ${EIGEN3_INCLUDE_DIR})
-    message(WARNING "Unable to find EIGEN3_INCLUDE_DIR...")
-    message(FATAL_ERROR  "Please set the environment variable like this: export EIGEN3_INCLUDE_DIR=/path/to/eigen3/")
-endif()
-
-
+INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
 
 if (APPLE)
     # default library path
@@ -39,6 +30,14 @@ if (WIN32)
   SET( EIGEN3_INCLUDE_DIR "$ENV{EIGEN3_INCLUDE_DIR}" )
   INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
 endif()
+
+message(STATUS "Checking Eigen availability...")
+if (NOT EXISTS ${EIGEN3_INCLUDE_DIR})
+    message(WARNING "Unable to find EIGEN3_INCLUDE_DIR...")
+    message(FATAL_ERROR  "Please set the environment variable like this: export EIGEN3_INCLUDE_DIR=/path/to/eigen3/")
+else(message(${EIGEN3_INCLUDE_DIR}))
+endif()
+
 
 # Download and unpack googletest at configure time
 configure_file(CMakeLists.txt.googletest googletest-download/CMakeLists.txt)
