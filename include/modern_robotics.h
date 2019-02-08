@@ -1,6 +1,6 @@
 #pragma once
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <vector>
 
 namespace mr {
@@ -11,6 +11,14 @@ namespace mr {
  * Returns: Boolean of true-ignore or false-can't ignore
  */
 bool NearZero(const double);
+
+/*
+ * Function: Calculate the 6x6 matrix [adV] of the given 6-vector
+ * Input: Eigen::VectorXd (6x1)
+ * Output: Eigen::MatrixXd (6x6)
+ * Note: Can be used to calculate the Lie bracket [V1, V2] = [adV1]V2
+ */
+Eigen::MatrixXd ad(Eigen::VectorXd);
 
 
 /*

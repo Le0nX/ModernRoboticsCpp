@@ -59,3 +59,18 @@ TEST(MRTest, JacobianBodyTest)
     ASSERT_TRUE(mr::JacobianBody(b_list, theta).isApprox(result,4));	
 }
 
+TEST(MRTest, adTest)
+{
+    Eigen::VectorXd V(6);
+    V << 1, 2, 3, 4, 5, 6;
+
+    Eigen::MatrixXd result(6,6);
+    result <<   0, -3,  2,  0,  0,  0,
+                3,  0, -1,  0,  0,  0,
+               -2,  1,  0,  0,  0,  0,
+                0, -6,  5,  0, -3,  2,
+                6,  0, -4,  3,  0, -1,
+               -5,  4,  0, -2,  1,  0;
+
+    ASSERT_TRUE(mr::ad(V).isApprox(result,4));	
+}

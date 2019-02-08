@@ -36,4 +36,4 @@ build/
 *.app
 
 # VSCode settings
-.vscode/settings.json
+.vscode/*
