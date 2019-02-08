@@ -1,9 +1,9 @@
 # Modern Robotics:  Mechanics, Planning, and Control
 # C++ Library
 
-This repository contains the code library accompanying [_Modern Robotics: 
-Mechanics, Planning, and Control_](http://modernrobotics.org) (Kevin Lynch 
-and Frank Park, Cambridge University Press 2017). The 
+This repository contains the code library accompanying [_Modern Robotics:
+Mechanics, Planning, and Control_](http://modernrobotics.org) (Kevin Lynch
+and Frank Park, Cambridge University Press 2017). The
 [user manual](https://github.com/NxRLab/ModernRobotics/doc/MRlib.pdf) is in the doc directory of [main repository](https://github.com/NxRLab/ModernRobotics/).
 
 The functions are available in:
@@ -23,14 +23,12 @@ The primary purpose of the provided software is to be easy to read and education
 * On Mac
 ```console
 foo@bar:~$ brew install eigen
-# Don't forget to ensure that you have correct library version in your path
-foo@bar:~$ export EIGEN3_INCLUDE_DIR=/usr/local/Cellar/eigen/3.3.5/include/eigen3/
 ```
 * On Linux
 ```console
-foo@bar:~$ sudo apt-get install eigen
+foo@bar:~$ sudo apt-get install libeigen3-dev
 ```
- 
+
 ### 2. Prepare build
 ```console
 foo@bar:~$ mkdir build && cd build
@@ -38,27 +36,19 @@ foo@bar:~$ mkdir build && cd build
 
 By default cmake will install our build into the system directories.
 To define a custom install directory we simply pass it to cmake:
-```console 
-foo@bar:~$ cmake .. -DCMAKE_INSTALL_PREFIX=../_install
+```console
+foo@bar:build $ cmake .. -DCMAKE_INSTALL_PREFIX=../_install
 ```
 Or just configure with defaults
-```console 
-foo@bar:~$ cmake .. 
+```console
+foo@bar:build $ cmake ..
 ```
 Building and installing library
-```console 
-foo@bar:~$ make && make install
+```console
+foo@bar:build $ make all && make install
 ```
 
-## Using library
+## Testing the library
 ```console
-foo@bar:~$ g++ test.cpp -I../include -L../build -lModernRoboticsCpp
+foo@bar:build $ ./lib_test
 ```
-If you get something like: 
-```console
-foo@bar:~$ ./a.out: error while loading shared libraries: libModernRoboticsCpp.so: cannot open shared object file: No such file or directory
-```
-Just tell your operating system where the library is:
-```console
-foo@bar:~$ export LD_LIBRARY_PATH=/path/to/the/library/ModernRoboticsCpp/_install/lib
- ```

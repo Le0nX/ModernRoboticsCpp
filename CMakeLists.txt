@@ -11,6 +11,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_STANDARD 11)
 
 
+
 find_package (Eigen3 REQUIRED)
 INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
 
@@ -31,12 +32,26 @@ if (WIN32)
   INCLUDE_DIRECTORIES ( "${EIGEN3_INCLUDE_DIR}" )
 endif()
 
-message(STATUS "Checking Eigen availability...")
-if (NOT EXISTS ${EIGEN3_INCLUDE_DIR})
-    message(WARNING "Unable to find EIGEN3_INCLUDE_DIR...")
-    message(FATAL_ERROR  "Please set the environment variable like this: export EIGEN3_INCLUDE_DIR=/path/to/eigen3/")
-else(message(${EIGEN3_INCLUDE_DIR}))
+# Finding Eigen is somewhat complicated because of our need to support Ubuntu
+# all the way back to saucy.  First we look for the Eigen3 cmake module
+# provided by the libeigen3-dev on newer Ubuntu.  If that fails, then we
+# fall-back to the version provided by cmake_modules, which is a stand-in.
+find_package(Eigen3 QUIET)
+if(NOT EIGEN3_FOUND)
+  find_package(cmake_modules REQUIRED)
+  find_package(Eigen REQUIRED)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN_INCLUDE_DIRS})
 endif()
+
+# Note that eigen 3.2 (on Ubuntu Wily) only provides EIGEN3_INCLUDE_DIR,
+# not EIGEN3_INCLUDE_DIRS, so we have to set the latter from the former.
+if(NOT EIGEN3_INCLUDE_DIRS)
+  set(EIGEN3_INCLUDE_DIRS ${EIGEN3_INCLUDE_DIR})
+endif()
+
+include_directories(include
+                    ${EIGEN3_INCLUDE_DIRS})
+
 
 
 # Download and unpack googletest at configure time
@@ -75,7 +90,7 @@ endif()
 
 add_library(ModernRoboticsCpp SHARED src/modern_robotics.cpp include/modern_robotics.h)
 
-SET(LIB_TEST_SOURCES
+set(LIB_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/src/lib_test.cpp
 )
 
