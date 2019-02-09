@@ -4,7 +4,7 @@
 This repository contains the code library accompanying [_Modern Robotics:
 Mechanics, Planning, and Control_](http://modernrobotics.org) (Kevin Lynch
 and Frank Park, Cambridge University Press 2017). The
-[user manual](https://github.com/NxRLab/ModernRobotics/doc/MRlib.pdf) is in the doc directory of [main repository](https://github.com/NxRLab/ModernRobotics/).
+[user manual](https://github.com/NxRLab/ModernRobotics/blob/master/doc/MRlib.pdf) is in the doc directory of [main repository](https://github.com/NxRLab/ModernRobotics/).
 
 The functions are available in:
 
