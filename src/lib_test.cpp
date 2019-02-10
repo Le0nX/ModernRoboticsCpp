@@ -9,7 +9,7 @@ TEST(MRTest, VecToSO3Test)
     Eigen::Vector3d vec(1,2,3);
     Eigen::Matrix3d result(3,3);
     result << 0,-3,2,3,0,-1,-2,1,0;
-    EXPECT_EQ(result, mr::VecToso3(vec));	
+    EXPECT_EQ(result, mr::VecToso3(vec));
 }
 
 TEST(MRTest, JacobianSpaceTest)
@@ -32,7 +32,7 @@ TEST(MRTest, JacobianSpaceTest)
               0,       0, -0.1398;
     Eigen::MatrixXd tmp_result = mr::JacobianSpace(s_list, theta);
     std::cout << tmp_result << std::endl;
-    ASSERT_TRUE(mr::JacobianSpace(s_list, theta).isApprox(result,4));	
+    ASSERT_TRUE(mr::JacobianSpace(s_list, theta).isApprox(result,4));
 }
 
 
@@ -56,7 +56,7 @@ TEST(MRTest, JacobianBodyTest)
         -0.0425, -0.2720,  0.2720;
     Eigen::MatrixXd tmp_result = mr::JacobianBody(b_list, theta);
     std::cout << tmp_result << std::endl;
-    ASSERT_TRUE(mr::JacobianBody(b_list, theta).isApprox(result,4));	
+    ASSERT_TRUE(mr::JacobianBody(b_list, theta).isApprox(result,4));
 }
 
 TEST(MRTest, adTest)
@@ -72,5 +72,37 @@ TEST(MRTest, adTest)
                 6,  0, -4,  3,  0, -1,
                -5,  4,  0, -2,  1,  0;
 
-    ASSERT_TRUE(mr::ad(V).isApprox(result,4));	
+    ASSERT_TRUE(mr::ad(V).isApprox(result,4));
+}
+
+TEST(MRTest, TransInvTest)
+{
+  Eigen::MatrixXd input(4, 4);
+  input <<   1, 0,  0, 0,
+              0, 0, -1, 0,
+              0, 1,  0, 3,
+              0, 0,  0, 1;
+  Eigen::MatrixXd result(4, 4);
+  result << 1,  0, 0,  0,
+            0,  0, 1, -3,
+            0, -1, 0,  0,
+            0,  0, 0,  1;
+
+  auto inv = mr::TransInv(input);
+  ASSERT_TRUE(inv.isApprox(result, 1));
+}
+
+TEST(MRtest, RotInvTest)
+{
+  Eigen::MatrixXd input(3, 3);
+  input <<   0, 0, 1,
+             1, 0, 0,
+             0, 1, 0;
+  Eigen::MatrixXd result(3, 3);
+  result << 0, 1, 0,
+            0, 0, 1,
+            1, 0, 0;
+
+  auto inv = mr::RotInv(input);
+  ASSERT_TRUE(inv.isApprox(result, 1));
 }
