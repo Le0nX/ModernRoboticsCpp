@@ -106,3 +106,17 @@ TEST(MRtest, RotInvTest)
   auto inv = mr::RotInv(input);
   ASSERT_TRUE(inv.isApprox(result, 1));
 }
+
+TEST(MRtest, ScrewToAxis)
+{
+  Eigen::Vector3d q, s;
+  q << 3, 0, 1;
+  s << 0, 0, 1;
+  double h = 2;
+
+  Eigen::VectorXd axis = mr::ScrewToAxis(q, s, h);
+  Eigen::VectorXd result(6);
+  result << 0, 0, 1, 0, -3, 2;
+
+  ASSERT_TRUE(axis.isApprox(result, 4));
+}
