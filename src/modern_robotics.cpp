@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace mr {
-    
+
 /* Function: Find if the value is negligible enough to consider 0
  * Inputs: value to be checked as a double
  * Returns: Boolean of true-ignore or false-can't ignore
@@ -251,7 +251,7 @@ Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd& Slist, const Eigen::MatrixX
  */
 Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd& Blist, const Eigen::MatrixXd& thetaList) {
     Eigen::MatrixXd Jb = Blist;
-    Eigen::MatrixXd T = Eigen::MatrixXd::Identity(4,4);  
+    Eigen::MatrixXd T = Eigen::MatrixXd::Identity(4,4);
     Eigen::VectorXd bListTemp(Blist.col(0).size());
     for(int i = thetaList.size()-2; i >= 0; i--) {
         bListTemp << Blist.col(i+1) * thetaList(i+1);
@@ -262,4 +262,18 @@ Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd& Blist, const Eigen::MatrixXd
     return Jb;
 }
 
+Eigen::MatrixXd TransInv(const Eigen::MatrixXd& transform){
+  auto rp = mr::TransToRp(transform);
+  auto Rt = rp.at(0).transpose();
+  auto t = -(Rt * rp.at(1));
+  Eigen::MatrixXd inv(4, 4);
+  inv.block(0, 0, 3, 3) = Rt;
+  inv.block(0, 3, 3, 1) = t;
+  inv(3, 3) = 1;
+  return inv;
+}
+
+Eigen::MatrixXd RotInv(const Eigen::MatrixXd& rotMatrix) {
+  return rotMatrix.transpose();
+}
 }

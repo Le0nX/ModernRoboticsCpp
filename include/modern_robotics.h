@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace mr {
-    
+
 /*
  * Function: Find if the value is negligible enough to consider 0
  * Inputs: value to be checked as a double
@@ -137,5 +137,19 @@ Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
  */
 Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
 
-}
 
+/*
+ * Inverts a homogeneous transformation matrix
+ * Inputs: A homogeneous transformation Matrix T
+ * Returns: The inverse of T
+ */
+Eigen::MatrixXd TransInv(const Eigen::MatrixXd&);
+
+/*
+ * Inverts a rotation matrix
+ * Inputs: A rotation matrix  R
+ * Returns: The inverse of R
+ */
+Eigen::MatrixXd RotInv(const Eigen::MatrixXd&);
+
+}
