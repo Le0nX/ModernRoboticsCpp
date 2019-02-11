@@ -276,4 +276,11 @@ Eigen::MatrixXd TransInv(const Eigen::MatrixXd& transform){
 Eigen::MatrixXd RotInv(const Eigen::MatrixXd& rotMatrix) {
   return rotMatrix.transpose();
 }
+
+Eigen::VectorXd ScrewToAxis(Eigen::Vector3d q, Eigen::Vector3d s, double h) {
+  Eigen::VectorXd axis(6);
+  axis.segment(0, 3) = s;
+  axis.segment(3, 3) = q.cross(s) + (h * s);
+  return axis;
+}
 }

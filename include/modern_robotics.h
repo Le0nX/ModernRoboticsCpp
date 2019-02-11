@@ -152,4 +152,15 @@ Eigen::MatrixXd TransInv(const Eigen::MatrixXd&);
  */
 Eigen::MatrixXd RotInv(const Eigen::MatrixXd&);
 
+/*
+ * Takes a parametric description of a screw axis and converts it to a
+ * normalized screw axis
+ * Inputs:
+ * q: A point lying on the screw axis
+ * s: A unit vector in the direction of the screw axis
+ * h: The pitch of the screw axis
+ * Returns: A normalized screw axis described by the inputs
+ */
+Eigen::VectorXd ScrewToAxis(Eigen::Vector3d q, Eigen::Vector3d s, double h);
+
 }
