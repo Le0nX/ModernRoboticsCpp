@@ -65,6 +65,13 @@ Eigen::Vector4d AxisAng3(const Eigen::Vector3d&);
 Eigen::Matrix3d MatrixExp3(const Eigen::Matrix3d&);
 
 
+/* Function: Computes the matrix logarithm of a rotation matrix
+ * Inputs: Rotation matrix
+ * Returns: matrix logarithm of a rotation
+ */
+Eigen::Matrix3d MatrixLog3(const Eigen::Matrix3d&);
+
+
 /*
  * Function: Combines a rotation matrix and position vector into a single
  * 				Special Euclidian Group (SE3) homogeneous transformation matrix
@@ -90,6 +97,13 @@ std::vector<Eigen::MatrixXd> TransToRp(const Eigen::MatrixXd&);
  * Returns: Transformation matrix
  */
 Eigen::MatrixXd VecTose3(const Eigen::VectorXd&);
+
+
+/* Function: Translates a transformation matrix into a spatial velocity vector
+ * Inputs: Transformation matrix
+ * Returns: Spatial velocity vector [angular velocity, linear velocity]
+ */
+Eigen::VectorXd se3ToVec(const Eigen::MatrixXd&);
 
 
 /*
