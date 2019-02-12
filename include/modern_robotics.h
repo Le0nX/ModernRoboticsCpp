@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace mr {
-    
+
 /*
  * Function: Find if the value is negligible enough to consider 0
  * Inputs: value to be checked as a double
@@ -121,6 +121,18 @@ Eigen::MatrixXd MatrixExp6(const Eigen::MatrixXd&);
  */
 Eigen::MatrixXd FKinSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::VectorXd&);
 
+/*
+ * Function: Compute end effector frame (used for current body position calculation)
+ * Inputs: Home configuration (position and orientation) of end-effector
+ *		   The joint screw axes in the body frame when the manipulator
+ *             is at the home position
+ * 		   A list of joint coordinates.
+ * Returns: Transfomation matrix representing the end-effector frame when the joints are
+ *				at the specified coordinates
+ * Notes: FK means Forward Kinematics
+ */
+Eigen::MatrixXd FKinBody(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::VectorXd&);
+
 
 /*
  * Function: Gives the space Jacobian
@@ -137,5 +149,30 @@ Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
  */
 Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd&, const Eigen::MatrixXd&);
 
-}
 
+/*
+ * Inverts a homogeneous transformation matrix
+ * Inputs: A homogeneous transformation Matrix T
+ * Returns: The inverse of T
+ */
+Eigen::MatrixXd TransInv(const Eigen::MatrixXd&);
+
+/*
+ * Inverts a rotation matrix
+ * Inputs: A rotation matrix  R
+ * Returns: The inverse of R
+ */
+Eigen::MatrixXd RotInv(const Eigen::MatrixXd&);
+
+/*
+ * Takes a parametric description of a screw axis and converts it to a
+ * normalized screw axis
+ * Inputs:
+ * q: A point lying on the screw axis
+ * s: A unit vector in the direction of the screw axis
+ * h: The pitch of the screw axis
+ * Returns: A normalized screw axis described by the inputs
+ */
+Eigen::VectorXd ScrewToAxis(Eigen::Vector3d q, Eigen::Vector3d s, double h);
+
+}

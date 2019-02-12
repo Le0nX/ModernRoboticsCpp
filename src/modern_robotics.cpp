@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace mr {
-    
+
 /* Function: Find if the value is negligible enough to consider 0
  * Inputs: value to be checked as a double
  * Returns: Boolean of true-ignore or false-can't ignore
@@ -225,6 +225,23 @@ Eigen::MatrixXd FKinSpace(const Eigen::MatrixXd& M, const Eigen::MatrixXd& Slist
     return T;
 }
 
+/*
+ * Function: Compute end effector frame (used for current body position calculation)
+ * Inputs: Home configuration (position and orientation) of end-effector
+ *		   The joint screw axes in the body frame when the manipulator
+ *             is at the home position
+ * 		   A list of joint coordinates.
+ * Returns: Transfomation matrix representing the end-effector frame when the joints are
+ *				at the specified coordinates
+ * Notes: FK means Forward Kinematics
+ */
+Eigen::MatrixXd FKinBody(const Eigen::MatrixXd& M, const Eigen::MatrixXd& Blist, const Eigen::VectorXd& thetaList){
+    Eigen::MatrixXd T = M;
+    for(int i=0; i<thetaList.size(); i++){
+        T = T * MatrixExp6(VecTose3(Blist.col(i)*thetaList(i)));
+    }
+}
+
 
 /* Function: Gives the space Jacobian
  * Inputs: Screw axis in home position, joint configuration
@@ -251,7 +268,7 @@ Eigen::MatrixXd JacobianSpace(const Eigen::MatrixXd& Slist, const Eigen::MatrixX
  */
 Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd& Blist, const Eigen::MatrixXd& thetaList) {
     Eigen::MatrixXd Jb = Blist;
-    Eigen::MatrixXd T = Eigen::MatrixXd::Identity(4,4);  
+    Eigen::MatrixXd T = Eigen::MatrixXd::Identity(4,4);
     Eigen::VectorXd bListTemp(Blist.col(0).size());
     for(int i = thetaList.size()-2; i >= 0; i--) {
         bListTemp << Blist.col(i+1) * thetaList(i+1);
@@ -262,4 +279,25 @@ Eigen::MatrixXd JacobianBody(const Eigen::MatrixXd& Blist, const Eigen::MatrixXd
     return Jb;
 }
 
+Eigen::MatrixXd TransInv(const Eigen::MatrixXd& transform){
+  auto rp = mr::TransToRp(transform);
+  auto Rt = rp.at(0).transpose();
+  auto t = -(Rt * rp.at(1));
+  Eigen::MatrixXd inv(4, 4);
+  inv.block(0, 0, 3, 3) = Rt;
+  inv.block(0, 3, 3, 1) = t;
+  inv(3, 3) = 1;
+  return inv;
+}
+
+Eigen::MatrixXd RotInv(const Eigen::MatrixXd& rotMatrix) {
+  return rotMatrix.transpose();
+}
+
+Eigen::VectorXd ScrewToAxis(Eigen::Vector3d q, Eigen::Vector3d s, double h) {
+  Eigen::VectorXd axis(6);
+  axis.segment(0, 3) = s;
+  axis.segment(3, 3) = q.cross(s) + (h * s);
+  return axis;
+}
 }
