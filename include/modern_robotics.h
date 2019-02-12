@@ -121,6 +121,18 @@ Eigen::MatrixXd MatrixExp6(const Eigen::MatrixXd&);
  */
 Eigen::MatrixXd FKinSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::VectorXd&);
 
+/*
+ * Function: Compute end effector frame (used for current body position calculation)
+ * Inputs: Home configuration (position and orientation) of end-effector
+ *		   The joint screw axes in the body frame when the manipulator
+ *             is at the home position
+ * 		   A list of joint coordinates.
+ * Returns: Transfomation matrix representing the end-effector frame when the joints are
+ *				at the specified coordinates
+ * Notes: FK means Forward Kinematics
+ */
+Eigen::MatrixXd FKinBody(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::VectorXd&);
+
 
 /*
  * Function: Gives the space Jacobian
