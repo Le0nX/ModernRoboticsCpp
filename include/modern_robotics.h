@@ -124,6 +124,14 @@ Eigen::MatrixXd MatrixExp6(const Eigen::MatrixXd&);
 
 
 /*
+ * Function: Computes the matrix logarithm of a homogeneous transformation matrix
+ * Inputs: R: Transformation matrix in SE3
+ * Returns: The matrix logarithm of R
+ */
+Eigen::MatrixXd MatrixLog6(const Eigen::MatrixXd&);
+
+
+/*
  * Function: Compute end effector frame (used for current spatial position calculation)
  * Inputs: Home configuration (position and orientation) of end-effector
  *		   The joint screw axes in the space frame when the manipulator
@@ -188,5 +196,19 @@ Eigen::MatrixXd RotInv(const Eigen::MatrixXd&);
  * Returns: A normalized screw axis described by the inputs
  */
 Eigen::VectorXd ScrewToAxis(Eigen::Vector3d q, Eigen::Vector3d s, double h);
+
+
+/*
+ * Function: Translates a 6-vector of exponential coordinates into screw
+ * axis-angle form
+ * Inputs: 
+ * expc6: A 6-vector of exponential coordinates for rigid-body motion
+          S*theta
+ * Returns: The corresponding normalized screw axis S; The distance theta traveled
+ * along/about S in form [S, theta]
+ * Note: Is it better to return std::map<S, theta>?
+ */
+Eigen::VectorXd AxisAng6(const Eigen::VectorXd&);
+
 
 }

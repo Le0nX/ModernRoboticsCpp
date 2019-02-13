@@ -247,6 +247,26 @@ namespace mr {
 
 	}
 
+	Eigen::MatrixXd MatrixLog6(const Eigen::MatrixXd& T) {
+		Eigen::MatrixXd m_ret(4, 4);
+		auto rp = mr::TransToRp(T);
+		Eigen::Matrix3d omgmat = MatrixLog3(rp.at(0));
+		Eigen::Matrix3d zeros3d = Eigen::Matrix3d::Zero(3, 3);
+		if (omgmat.isApprox(zeros3d)) {
+			m_ret << zeros3d, rp.at(1),
+				0, 0, 0, 0;
+		}
+		else {
+			double theta = std::acos((rp.at(0).trace() - 1) / 2.0);
+			Eigen::Matrix3d logExpand1 = Eigen::MatrixXd::Identity(3, 3) - omgmat / 2.0;
+			Eigen::Matrix3d logExpand2 = (1.0 / theta - 1.0 / std::tan(theta / 2.0) / 2)*omgmat*omgmat / theta;
+			Eigen::Matrix3d logExpand = logExpand1 + logExpand2;
+			m_ret << omgmat, logExpand*rp.at(1),
+				0, 0, 0, 0;
+		}
+		return m_ret;
+	}
+
 
 	/* Function: Compute end effector frame (used for current spatial position calculation)
 	 * Inputs: Home configuration (position and orientation) of end-effector
@@ -339,5 +359,14 @@ namespace mr {
 		axis.segment(0, 3) = s;
 		axis.segment(3, 3) = q.cross(s) + (h * s);
 		return axis;
+	}
+
+	Eigen::VectorXd AxisAng6(const Eigen::VectorXd& expc6) {
+		Eigen::VectorXd v_ret;
+		double theta = Eigen::Vector3d(expc6(0), expc6(1), expc6(2)).norm();
+		if (NearZero(theta))
+			theta = Eigen::Vector3d(expc6(3), expc6(4), expc6(5)).norm();
+		v_ret << expc6 / theta, theta;
+		return v_ret;
 	}
 }
