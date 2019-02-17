@@ -211,4 +211,27 @@ Eigen::VectorXd ScrewToAxis(Eigen::Vector3d q, Eigen::Vector3d s, double h);
 Eigen::VectorXd AxisAng6(const Eigen::VectorXd&);
 
 
+/*
+ * Function: Returns projection of one matrix into SO(3)
+ * Inputs:
+ * M:		A matrix near SO(3) to project to SO(3)
+ * Returns: The closest matrix R that is in SO(3)
+ * Projects a matrix mat to the closest matrix in SO(3) using singular-value decomposition
+ * (see http://hades.mech.northwestern.edu/index.php/Modern_Robotics_Linear_Algebra_Review).
+ * This function is only appropriate for matrices close to SO(3).
+ */
+Eigen::MatrixXd ProjectToSO3(const Eigen::MatrixXd&);
+
+
+/*
+ * Function: Returns projection of one matrix into SE(3)
+ * Inputs:
+ * M:		A 4x4 matrix near SE(3) to project to SE(3)
+ * Returns: The closest matrix T that is in SE(3)
+ * Projects a matrix mat to the closest matrix in SO(3) using singular-value decomposition
+ * (see http://hades.mech.northwestern.edu/index.php/Modern_Robotics_Linear_Algebra_Review).
+ * This function is only appropriate for matrices close to SE(3).
+ */
+Eigen::MatrixXd ProjectToSE3(const Eigen::MatrixXd&);
+
 }

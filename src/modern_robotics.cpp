@@ -369,4 +369,20 @@ namespace mr {
 		v_ret << expc6 / theta, theta;
 		return v_ret;
 	}
+
+	Eigen::MatrixXd ProjectToSO3(const Eigen::MatrixXd& M) {
+		Eigen::JacobiSVD<Eigen::MatrixXd> svd(M, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		Eigen::MatrixXd R = svd.matrixU() * svd.matrixV().transpose();
+		if (R.determinant() < 0)
+			// In this case the result may be far from M; reverse sign of 3rd column
+			R.col(2) *= -1;
+		return R;
+	}
+
+	Eigen::MatrixXd ProjectToSE3(const Eigen::MatrixXd& M) {
+		Eigen::Matrix3d R = M.block<3, 3>(0, 0);
+		Eigen::Vector3d t = M.block<3, 1>(0, 3);
+		Eigen::MatrixXd T = RpToTrans(ProjectToSO3(R), t);
+		return T;
+	}
 }
