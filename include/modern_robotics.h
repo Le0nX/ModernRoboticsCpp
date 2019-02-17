@@ -234,4 +234,32 @@ Eigen::MatrixXd ProjectToSO3(const Eigen::MatrixXd&);
  */
 Eigen::MatrixXd ProjectToSE3(const Eigen::MatrixXd&);
 
+
+/*
+ * Function: Returns the Frobenius norm to describe the distance of M from the SO(3) manifold
+ * Inputs:
+ * M: A 3x3 matrix
+ * Outputs:
+ *	 the distance from mat to the SO(3) manifold using the following
+ * method:
+ *  If det(M) <= 0, return a large number.
+ *  If det(M) > 0, return norm(M^T*M - I).
+ */
+double DistanceToSO3(const Eigen::Matrix3d&);
+
+
+/*
+ * Function: Returns the Frobenius norm to describe the distance of mat from the SE(3) manifold
+ * Inputs:
+ * T: A 4x4 matrix
+ * Outputs:
+ *	 the distance from T to the SE(3) manifold using the following
+ * method:
+ *  Compute the determinant of matR, the top 3x3 submatrix of T.
+ *  If det(matR) <= 0, return a large number.
+ *  If det(matR) > 0, replace the top 3x3 submatrix of mat with matR^T*matR,
+ *  and set the first three entries of the fourth column of mat to zero. Then
+ *  return norm(T - I).
+ */
+double DistanceToSE3(const Eigen::Matrix4d&);
 }

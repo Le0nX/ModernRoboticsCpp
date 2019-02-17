@@ -385,4 +385,24 @@ namespace mr {
 		Eigen::MatrixXd T = RpToTrans(ProjectToSO3(R), t);
 		return T;
 	}
+
+	double DistanceToSO3(const Eigen::Matrix3d& M) {
+		if (M.determinant() > 0)
+			return (M.transpose() * M - Eigen::Matrix3d::Identity()).norm();
+		else
+			return 1.0e9;
+	}
+
+	double DistanceToSE3(const Eigen::Matrix4d& T) {
+		Eigen::Matrix3d matR = T.block<3, 3>(0, 0);
+		if (matR.determinant() > 0) {
+			Eigen::Matrix4d m_ret;
+			m_ret << matR.transpose()*matR, Eigen::Vector3d::Zero(3),
+				T.row(3);
+			m_ret = m_ret - Eigen::Matrix4d::Identity();
+			return m_ret.norm();
+		}
+		else
+			return 1.0e9;
+	}
 }

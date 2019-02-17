@@ -203,3 +203,21 @@ TEST(MRTest, MatrixLog6Test) {
 	ASSERT_TRUE(Toutput.isApprox(result, 4));
 }
 
+TEST(MRTest, DistanceToSO3Test) {
+	Eigen::Matrix3d input;
+	double result = 0.088353;
+	input << 1.0, 0.0, 0.0,
+		0.0, 0.1, -0.95,
+		0.0, 1.0, 0.1;
+	ASSERT_DOUBLE_EQ(result, mr::DistanceToSO3(input));
+}
+
+TEST(MRTest, DistanceToSE3Test) {
+	Eigen::Matrix4d input;
+	double result = 0.134931;
+	input << 1.0, 0.0, 0.0, 1.2,
+		0.0, 0.1, -0.95, 1.5,
+		0.0, 1.0, 0.1, -0.9,
+		0.0, 0.0, 0.1, 0.98;
+	ASSERT_DOUBLE_EQ(result, mr::DistanceToSE3(input));
+}
