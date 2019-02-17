@@ -175,3 +175,31 @@ TEST(MRTest, FKInSpaceTest)
 
   ASSERT_TRUE(FKCal.isApprox(result, 4));
 }
+
+TEST(MRTest, AxisAng6Test) {
+	Eigen::VectorXd input(6);
+	Eigen::VectorXd result(7);
+	input << 1.0, 0.0, 0.0, 1.0, 1.0, 2.0, 3.0;
+	result << 1.0, 0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 1.0;
+
+	Eigen::VectorXd output = mr::AxisAng6(input);
+	ASSERT_TRUE(output.isApprox(result, 4));
+}
+
+TEST(MRTest, MatrixLog6Test) {
+	Eigen::MatrixXd Tinput(4, 4);
+	Eigen::MatrixXd result(4, 4);
+	Tinput << 1, 0, 0, 0,
+		0, 0, -1, 0,
+		0, 1, 0, 3,
+		0, 0, 0, 1;
+
+	result << 0, 0, 0, 0,
+		0, 0, -1.57079633, 2.35619449,
+		0, 1.57079633, 0, 2.35619449,
+		0, 0, 0, 0;
+
+	Eigen::MatrixXd Toutput = mr::MatrixLog6(Tinput);
+	ASSERT_TRUE(Toutput.isApprox(result, 4));
+}
+

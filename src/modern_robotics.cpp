@@ -122,7 +122,7 @@ namespace mr {
 			else if (!NearZero(1 + R(1, 1)))
 				omg = (1.0 / std::sqrt(2 * (1 + R(1, 1))))*Eigen::Vector3d(R(0, 1), 1 + R(1, 1), R(2, 1));
 			else
-				omg = (1.0 / std::sqrt(2 * (1 + R(0, 0))))*Eigen::Vector3cd(1 + R(0, 0), R(1, 0), R(2, 0));
+				omg = (1.0 / std::sqrt(2 * (1 + R(0, 0))))*Eigen::Vector3d(1 + R(0, 0), R(1, 0), R(2, 0));
 			m_ret = VecToso3(M_PI * omg);
 			return m_ret;
 		}
@@ -362,7 +362,7 @@ namespace mr {
 	}
 
 	Eigen::VectorXd AxisAng6(const Eigen::VectorXd& expc6) {
-		Eigen::VectorXd v_ret;
+		Eigen::VectorXd v_ret(7);
 		double theta = Eigen::Vector3d(expc6(0), expc6(1), expc6(2)).norm();
 		if (NearZero(theta))
 			theta = Eigen::Vector3d(expc6(3), expc6(4), expc6(5)).norm();
