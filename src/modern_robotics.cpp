@@ -300,6 +300,7 @@ namespace mr {
 		for (int i = 0; i < thetaList.size(); i++) {
 			T = T * MatrixExp6(VecTose3(Blist.col(i)*thetaList(i)));
 		}
+		return T;
 	}
 
 
