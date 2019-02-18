@@ -405,4 +405,12 @@ namespace mr {
 		else
 			return 1.0e9;
 	}
+
+	bool TestIfSO3(const Eigen::Matrix3d& M) {
+		return std::abs(DistanceToSO3(M)) < 1e-3;
+	}
+
+	bool TestIfSE3(const Eigen::Matrix4d& T) {
+		return std::abs(DistanceToSE3(T)) < 1e-3;
+	}
 }

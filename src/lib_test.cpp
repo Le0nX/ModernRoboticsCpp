@@ -221,3 +221,22 @@ TEST(MRTest, DistanceToSE3Test) {
 		0.0, 0.0, 0.1, 0.98;
 	ASSERT_DOUBLE_EQ(result, mr::DistanceToSE3(input));
 }
+
+TEST(MRTest, TestIfSO3Test) {
+	Eigen::Matrix3d input;
+	bool result = false;
+	input << 1.0, 0.0, 0.0,
+		0.0, 0.1, -0.95,
+		0.0, 1.0, 0.1;
+	ASSERT_EQ(result, mr::TestIfSO3(input));
+}
+
+TEST(MRTest, TestIfSE3Test) {
+	Eigen::Matrix4d input;
+	bool result = false;
+	input << 1.0, 0.0, 0.0, 1.2,
+		0.0, 0.1, -0.95, 1.5,
+		0.0, 1.0, 0.1, -0.9,
+		0.0, 0.0, 0.1, 0.98;
+	ASSERT_EQ(result, mr::TestIfSE3(input));
+}

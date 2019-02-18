@@ -262,4 +262,24 @@ double DistanceToSO3(const Eigen::Matrix3d&);
  *  return norm(T - I).
  */
 double DistanceToSE3(const Eigen::Matrix4d&);
+
+
+/*
+ * Function: Returns true if M is close to or on the manifold SO(3)
+ * Inputs:
+ * M: A 3x3 matrix
+ * Outputs:
+ *	 true if M is very close to or in SO(3), false otherwise
+ */
+bool TestIfSO3(const Eigen::Matrix3d&);
+
+
+/*
+ * Function: Returns true if T is close to or on the manifold SE(3)
+ * Inputs:
+ * M: A 4x4 matrix
+ * Outputs:
+ *	 true if T is very close to or in SE(3), false otherwise
+ */
+bool TestIfSE3(const Eigen::Matrix4d&);
 }
