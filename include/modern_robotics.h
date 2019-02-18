@@ -124,6 +124,14 @@ Eigen::MatrixXd MatrixExp6(const Eigen::MatrixXd&);
 
 
 /*
+ * Function: Computes the matrix logarithm of a homogeneous transformation matrix
+ * Inputs: R: Transformation matrix in SE3
+ * Returns: The matrix logarithm of R
+ */
+Eigen::MatrixXd MatrixLog6(const Eigen::MatrixXd&);
+
+
+/*
  * Function: Compute end effector frame (used for current spatial position calculation)
  * Inputs: Home configuration (position and orientation) of end-effector
  *		   The joint screw axes in the space frame when the manipulator
@@ -189,4 +197,69 @@ Eigen::MatrixXd RotInv(const Eigen::MatrixXd&);
  */
 Eigen::VectorXd ScrewToAxis(Eigen::Vector3d q, Eigen::Vector3d s, double h);
 
+
+/*
+ * Function: Translates a 6-vector of exponential coordinates into screw
+ * axis-angle form
+ * Inputs: 
+ * expc6: A 6-vector of exponential coordinates for rigid-body motion
+          S*theta
+ * Returns: The corresponding normalized screw axis S; The distance theta traveled
+ * along/about S in form [S, theta]
+ * Note: Is it better to return std::map<S, theta>?
+ */
+Eigen::VectorXd AxisAng6(const Eigen::VectorXd&);
+
+
+/*
+ * Function: Returns projection of one matrix into SO(3)
+ * Inputs:
+ * M:		A matrix near SO(3) to project to SO(3)
+ * Returns: The closest matrix R that is in SO(3)
+ * Projects a matrix mat to the closest matrix in SO(3) using singular-value decomposition
+ * (see http://hades.mech.northwestern.edu/index.php/Modern_Robotics_Linear_Algebra_Review).
+ * This function is only appropriate for matrices close to SO(3).
+ */
+Eigen::MatrixXd ProjectToSO3(const Eigen::MatrixXd&);
+
+
+/*
+ * Function: Returns projection of one matrix into SE(3)
+ * Inputs:
+ * M:		A 4x4 matrix near SE(3) to project to SE(3)
+ * Returns: The closest matrix T that is in SE(3)
+ * Projects a matrix mat to the closest matrix in SO(3) using singular-value decomposition
+ * (see http://hades.mech.northwestern.edu/index.php/Modern_Robotics_Linear_Algebra_Review).
+ * This function is only appropriate for matrices close to SE(3).
+ */
+Eigen::MatrixXd ProjectToSE3(const Eigen::MatrixXd&);
+
+
+/*
+ * Function: Returns the Frobenius norm to describe the distance of M from the SO(3) manifold
+ * Inputs:
+ * M: A 3x3 matrix
+ * Outputs:
+ *	 the distance from mat to the SO(3) manifold using the following
+ * method:
+ *  If det(M) <= 0, return a large number.
+ *  If det(M) > 0, return norm(M^T*M - I).
+ */
+double DistanceToSO3(const Eigen::Matrix3d&);
+
+
+/*
+ * Function: Returns the Frobenius norm to describe the distance of mat from the SE(3) manifold
+ * Inputs:
+ * T: A 4x4 matrix
+ * Outputs:
+ *	 the distance from T to the SE(3) manifold using the following
+ * method:
+ *  Compute the determinant of matR, the top 3x3 submatrix of T.
+ *  If det(matR) <= 0, return a large number.
+ *  If det(matR) > 0, replace the top 3x3 submatrix of mat with matR^T*matR,
+ *  and set the first three entries of the fourth column of mat to zero. Then
+ *  return norm(T - I).
+ */
+double DistanceToSE3(const Eigen::Matrix4d&);
 }
