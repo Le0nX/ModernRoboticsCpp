@@ -282,4 +282,56 @@ bool TestIfSO3(const Eigen::Matrix3d&);
  *	 true if T is very close to or in SE(3), false otherwise
  */
 bool TestIfSE3(const Eigen::Matrix4d&);
+
+
+/*
+ * Function: Computes inverse kinematics in the body frame for an open chain robot
+ * Inputs:
+ *	Blist: The joint screw axes in the end-effector frame when the
+ *         manipulator is at the home position, in the format of a
+ *         matrix with axes as the columns
+ *	M: The home configuration of the end-effector
+ *	T: The desired end-effector configuration Tsd
+ *	thetalist[in][out]: An initial guess and result output of joint angles that are close to
+ *         satisfying Tsd
+ *	emog: A small positive tolerance on the end-effector orientation
+ *        error. The returned joint angles must give an end-effector
+ *        orientation error less than eomg
+ *	ev: A small positive tolerance on the end-effector linear position
+ *      error. The returned joint angles must give an end-effector
+ *      position error less than ev
+ * Outputs:
+ *	success: A logical value where TRUE means that the function found
+ *           a solution and FALSE means that it ran through the set
+ *           number of maximum iterations without finding a solution
+ *           within the tolerances eomg and ev.
+ *	thetalist[in][out]: Joint angles that achieve T within the specified tolerances,
+ */
+bool IKinBody(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::MatrixXd&, Eigen::VectorXd&, double, double);
+
+
+/*
+ * Function: Computes inverse kinematics in the space frame for an open chain robot
+ * Inputs:
+ *	Slist: The joint screw axes in the space frame when the
+ *         manipulator is at the home position, in the format of a
+ *         matrix with axes as the columns
+ *	M: The home configuration of the end-effector
+ *	T: The desired end-effector configuration Tsd
+ *	thetalist[in][out]: An initial guess and result output of joint angles that are close to
+ *         satisfying Tsd
+ *	emog: A small positive tolerance on the end-effector orientation
+ *        error. The returned joint angles must give an end-effector
+ *        orientation error less than eomg
+ *	ev: A small positive tolerance on the end-effector linear position
+ *      error. The returned joint angles must give an end-effector
+ *      position error less than ev
+ * Outputs:
+ *	success: A logical value where TRUE means that the function found
+ *           a solution and FALSE means that it ran through the set
+ *           number of maximum iterations without finding a solution
+ *           within the tolerances eomg and ev.
+ *	thetalist[in][out]: Joint angles that achieve T within the specified tolerances,
+ */
+bool IKinSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::MatrixXd&, Eigen::VectorXd&, double, double);
 }
