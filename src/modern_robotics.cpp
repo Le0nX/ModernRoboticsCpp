@@ -300,6 +300,7 @@ namespace mr {
 		for (int i = 0; i < thetaList.size(); i++) {
 			T = T * MatrixExp6(VecTose3(Blist.col(i)*thetaList(i)));
 		}
+		return T;
 	}
 
 
@@ -404,5 +405,66 @@ namespace mr {
 		}
 		else
 			return 1.0e9;
+	}
+
+	bool TestIfSO3(const Eigen::Matrix3d& M) {
+		return std::abs(DistanceToSO3(M)) < 1e-3;
+	}
+
+	bool TestIfSE3(const Eigen::Matrix4d& T) {
+		return std::abs(DistanceToSE3(T)) < 1e-3;
+	}
+	bool IKinBody(const Eigen::MatrixXd& Blist, const Eigen::MatrixXd& M, const Eigen::MatrixXd& T,
+		Eigen::VectorXd& thetalist, double eomg, double ev) {
+		int i = 0;
+		int maxiterations = 20;
+		Eigen::MatrixXd Tfk = FKinBody(M, Blist, thetalist);
+		Eigen::MatrixXd Tdiff = TransInv(Tfk)*T;
+		Eigen::VectorXd Vb = se3ToVec(MatrixLog6(Tdiff));
+		Eigen::Vector3d angular(Vb(0), Vb(1), Vb(2));
+		Eigen::Vector3d linear(Vb(3), Vb(4), Vb(5));
+
+		bool err = (angular.norm() > eomg || linear.norm() > ev);
+		Eigen::MatrixXd Jb;
+		while (err && i < maxiterations) {
+			Jb = JacobianBody(Blist, thetalist);
+			thetalist += Jb.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Vb);
+			i += 1;
+			// iterate
+			Tfk = FKinBody(M, Blist, thetalist);
+			Tdiff = TransInv(Tfk)*T;
+			Vb = se3ToVec(MatrixLog6(Tdiff));
+			angular = Eigen::Vector3d(Vb(0), Vb(1), Vb(2));
+			linear = Eigen::Vector3d(Vb(3), Vb(4), Vb(5));
+			err = (angular.norm() > eomg || linear.norm() > ev);
+		}
+		return !err;
+	}
+
+	bool IKinSpace(const Eigen::MatrixXd& Slist, const Eigen::MatrixXd& M, const Eigen::MatrixXd& T,
+		Eigen::VectorXd& thetalist, double eomg, double ev) {
+		int i = 0;
+		int maxiterations = 20;
+		Eigen::MatrixXd Tfk = FKinSpace(M, Slist, thetalist);
+		Eigen::MatrixXd Tdiff = TransInv(Tfk)*T;
+		Eigen::VectorXd Vs = Adjoint(Tfk)*se3ToVec(MatrixLog6(Tdiff));
+		Eigen::Vector3d angular(Vs(0), Vs(1), Vs(2));
+		Eigen::Vector3d linear(Vs(3), Vs(4), Vs(5));
+
+		bool err = (angular.norm() > eomg || linear.norm() > ev);
+		Eigen::MatrixXd Js;
+		while (err && i < maxiterations) {
+			Js = JacobianSpace(Slist, thetalist);
+			thetalist += Js.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(Vs);
+			i += 1;
+			// iterate
+			Tfk = FKinSpace(M, Slist, thetalist);
+			Tdiff = TransInv(Tfk)*T;
+			Vs = Adjoint(Tfk)*se3ToVec(MatrixLog6(Tdiff));
+			angular = Eigen::Vector3d(Vs(0), Vs(1), Vs(2));
+			linear = Eigen::Vector3d(Vs(3), Vs(4), Vs(5));
+			err = (angular.norm() > eomg || linear.norm() > ev);
+		}
+		return !err;
 	}
 }

@@ -221,3 +221,78 @@ TEST(MRTest, DistanceToSE3Test) {
 		0.0, 0.0, 0.1, 0.98;
 	ASSERT_DOUBLE_EQ(result, mr::DistanceToSE3(input));
 }
+
+TEST(MRTest, TestIfSO3Test) {
+	Eigen::Matrix3d input;
+	bool result = false;
+	input << 1.0, 0.0, 0.0,
+		0.0, 0.1, -0.95,
+		0.0, 1.0, 0.1;
+	ASSERT_EQ(result, mr::TestIfSO3(input));
+}
+
+TEST(MRTest, TestIfSE3Test) {
+	Eigen::Matrix4d input;
+	bool result = false;
+	input << 1.0, 0.0, 0.0, 1.2,
+		0.0, 0.1, -0.95, 1.5,
+		0.0, 1.0, 0.1, -0.9,
+		0.0, 0.0, 0.1, 0.98;
+	ASSERT_EQ(result, mr::TestIfSE3(input));
+}
+
+TEST(MRTest, IKinBodyTest) {
+	Eigen::MatrixXd BlistT(3, 6);
+	BlistT << 0, 0, -1, 2, 0, 0,
+		0, 0, 0, 0, 1, 0,
+		0, 0, 1, 0, 0, 0.1;
+	Eigen::MatrixXd Blist = BlistT.transpose();
+	Eigen::Matrix4d M;
+	M << -1, 0, 0, 0,
+		0, 1, 0, 6,
+		0, 0, -1, 2,
+		0, 0, 0, 1;
+	Eigen::Matrix4d T;
+	T << 0, 1, 0, -5,
+		1, 0, 0, 4,
+		0, 0, -1, 1.6858,
+		0, 0, 0, 1;
+	Eigen::VectorXd thetalist(3);
+	thetalist << 1.5, 2.5, 3;
+	double eomg = 0.01;
+	double ev = 0.001;
+	bool b_result = true;
+	Eigen::VectorXd theta_result(3);
+	theta_result << 1.57073819, 2.999667, 3.14153913;
+	bool iRet = mr::IKinBody(Blist, M, T, thetalist, eomg, ev);
+	ASSERT_EQ(b_result, iRet);
+	ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
+}
+
+TEST(MRTest, IKinSpaceTest) {
+	Eigen::MatrixXd SlistT(3, 6);
+	SlistT << 0, 0, 1, 4, 0, 0,
+		0, 0, 0, 0, 1, 0,
+		0, 0, -1, -6, 0, -0.1;
+	Eigen::MatrixXd Slist = SlistT.transpose();
+	Eigen::Matrix4d M;
+	M << -1, 0, 0, 0,
+		0, 1, 0, 6,
+		0, 0, -1, 2,
+		0, 0, 0, 1;
+	Eigen::Matrix4d T;
+	T << 0, 1, 0, -5,
+		1, 0, 0, 4,
+		0, 0, -1, 1.6858,
+		0, 0, 0, 1;
+	Eigen::VectorXd thetalist(3);
+	thetalist << 1.5, 2.5, 3;
+	double eomg = 0.01;
+	double ev = 0.001;
+	bool b_result = true;
+	Eigen::VectorXd theta_result(3);
+	theta_result << 1.57073783, 2.99966384, 3.1415342;
+	bool iRet = mr::IKinSpace(Slist, M, T, thetalist, eomg, ev);
+	ASSERT_EQ(b_result, iRet);
+	ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
+}
