@@ -334,4 +334,50 @@ bool IKinBody(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::Matri
  *	thetalist[in][out]: Joint angles that achieve T within the specified tolerances,
  */
 bool IKinSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::MatrixXd&, Eigen::VectorXd&, double, double);
+
+
+/*
+ * Function: Computes inverse dynamics in the space frame for an open chain robot
+ * Inputs:
+ *	thetalist: n-vector of joint variables
+ *	dthetalist: n-vector of joint rates
+ *	ddthetalist: n-vector of joint accelerations
+ *	g: Gravity vector g
+ *	Ftip: Spatial force applied by the end-effector expressed in frame {n+1}
+ *  Mlist: List of link frames i relative to i-1 at the home position
+ *	Glist: Spatial inertia matrices Gi of the links
+ *	Slist: Screw axes Si of the joints in a space frame, in the format
+ *         of a matrix with axes as the columns
+ * Outputs:
+ *	taulist: The n-vector of required joint forces/torques
+ * Notes:
+ *   This function uses forward-backward Newton-Euler iterations to solve the equation:
+ *   taulist = Mlist(thetalist)ddthetalist + c(thetalist,dthetalist) \
+ *             + g(thetalist) + Jtr(thetalist)Ftip
+ */
+Eigen::VectorXd InverseDynamics(const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&,
+	const Eigen::VectorXd&, const std::vector<Eigen::MatrixXd>&, const std::vector<Eigen::MatrixXd>&, const Eigen::MatrixXd&);
+
+
+/*
+ * Function: Computes the mass matrix of an open chain robot based on the given configuration
+ * Inputs:
+ *	thetalist: A list of joint variables
+ *  Mlist: List of link frames i relative to i-1 at the home position
+ *	Glist: Spatial inertia matrices Gi of the links
+ *	Slist: Screw axes Si of the joints in a space frame, in the format
+ *         of a matrix with axes as the columns
+ * Outputs:
+ *	M: The numerical inertia matrix M(thetalist) of an n-joint serial
+ *     chain at the given configuration thetalist
+ * Notes:
+ *	This function calls InverseDynamics n times, each time passing a
+ *  ddthetalist vector with a single element equal to one and all other
+ *  inputs set to zero.
+ *  Each call of InverseDynamics generates a single column, and these columns
+ *  are assembled to create the inertia matrix.
+ */
+Eigen::MatrixXd MassMatrix(const Eigen::VectorXd&, const std::vector<Eigen::MatrixXd>&, const std::vector<Eigen::MatrixXd>&, const Eigen::MatrixXd&);
+
+
 }

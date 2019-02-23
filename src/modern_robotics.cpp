@@ -344,7 +344,7 @@ namespace mr {
 		auto rp = mr::TransToRp(transform);
 		auto Rt = rp.at(0).transpose();
 		auto t = -(Rt * rp.at(1));
-		Eigen::MatrixXd inv(4, 4);
+		Eigen::MatrixXd inv = Eigen::MatrixXd::Zero(4, 4);
 		inv.block(0, 0, 3, 3) = Rt;
 		inv.block(0, 3, 3, 1) = t;
 		inv(3, 3) = 1;
@@ -466,5 +466,51 @@ namespace mr {
 			err = (angular.norm() > eomg || linear.norm() > ev);
 		}
 		return !err;
+	}
+
+	Eigen::VectorXd InverseDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& ddthetalist,
+		const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist,
+		const Eigen::MatrixXd& Slist) {
+		int n = thetalist.size();
+		Eigen::MatrixXd Mi = Eigen::MatrixXd::Identity(4, 4);
+		Eigen::MatrixXd Ai = Eigen::MatrixXd::Zero(6, n);
+		std::vector<Eigen::MatrixXd> AdTi(n + 1);
+		Eigen::MatrixXd Vi = Eigen::MatrixXd::Zero(6, n + 1);
+		Eigen::MatrixXd Vdi = Eigen::MatrixXd::Zero(6, n + 1);
+		Vdi.col(0) << 0, 0, 0, -g;
+		AdTi[n] = Adjoint(TransInv(Mlist[n]));
+		Eigen::VectorXd Fi = Ftip;
+		Eigen::VectorXd taulist = Eigen::VectorXd::Zero(n);
+		Eigen::MatrixXd Mt;
+
+		for (int i = 0; i < n; ++i) {
+			Mi *= Mlist[i];
+			Ai.col(i) = Adjoint(TransInv(Mi))*Slist.col(i);
+			Mt = VecTose3(Ai.col(i)* -1 * thetalist(i));
+			AdTi[i] = Adjoint(MatrixExp6(Mt)*TransInv(Mlist[i]));
+			Vi.col(i + 1) = AdTi[i] * Vi.col(i) + Ai.col(i)*dthetalist(i);
+			Vdi.col(i + 1) = AdTi[i] * Vdi.col(i) + Ai.col(i)*ddthetalist(i) + ad(Vi.col(i + 1))*Ai.col(i)*dthetalist(i);
+		}
+		for (int i = n - 1; i > -1; --i) {
+			Fi = AdTi[i + 1].transpose() * Fi + Glist[i] * Vdi.col(i + 1) - ad(Vi.col(i + 1)).transpose() *(Glist[i] * Vi.col(i + 1));
+			taulist(i) = Fi.transpose() * Ai.col(i);
+		}
+		return taulist;
+	}
+
+	Eigen::MatrixXd MassMatrix(const Eigen::VectorXd& thetalist, const std::vector<Eigen::MatrixXd>& Mlist, 
+		const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+		int n = thetalist.size();
+		Eigen::MatrixXd M = Eigen::MatrixXd::Zero(n, n);
+		Eigen::VectorXd dthetalist = Eigen::VectorXd::Zero(n);
+		Eigen::VectorXd ddthetalist;
+		Eigen::VectorXd g(3); g << 0, 0, 0;
+		Eigen::VectorXd Ftip(6); Ftip << 0, 0, 0, 0, 0, 0;
+		for (int i = 0; i < n; ++i) {
+			ddthetalist = Eigen::VectorXd::Zero(n);
+			ddthetalist(i) = 1;
+			M.col(i) = InverseDynamics(thetalist, dthetalist, ddthetalist, g, Ftip, Mlist, Glist, Slist);
+		}
+		return M;
 	}
 }
