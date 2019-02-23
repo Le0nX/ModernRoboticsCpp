@@ -205,6 +205,7 @@ namespace mr {
 	Eigen::MatrixXd Adjoint(const Eigen::MatrixXd& T) {
 		std::vector<Eigen::MatrixXd> R = TransToRp(T);
 		Eigen::MatrixXd ad_ret(6, 6);
+		ad_ret = Eigen::MatrixXd::Zero(6, 6);
 		Eigen::MatrixXd zeroes = Eigen::MatrixXd::Zero(3, 3);
 		ad_ret << R[0], zeroes,
 			VecToso3(R[1]) * R[0], R[0];
@@ -345,6 +346,7 @@ namespace mr {
 		auto Rt = rp.at(0).transpose();
 		auto t = -(Rt * rp.at(1));
 		Eigen::MatrixXd inv(4, 4);
+		inv = Eigen::MatrixXd::Zero(4,4);
 		inv.block(0, 0, 3, 3) = Rt;
 		inv.block(0, 3, 3, 1) = t;
 		inv(3, 3) = 1;
@@ -466,5 +468,68 @@ namespace mr {
 			err = (angular.norm() > eomg || linear.norm() > ev);
 		}
 		return !err;
+	}
+
+	/* 
+	* Function: This function uses forward-backward Newton-Euler iterations to solve the 
+	* equation:
+	* taulist = Mlist(thetalist) * ddthetalist + c(thetalist, dthetalist) ...
+	*           + g(thetalist) + Jtr(thetalist) * Ftip
+	* Inputs:
+	*  thetalist: n-vector of joint variables
+	*  dthetalist: n-vector of joint rates
+	*  ddthetalist: n-vector of joint accelerations
+	*  g: Gravity vector g
+	*  Ftip: Spatial force applied by the end-effector expressed in frame {n+1}
+	*  Mlist: List of link frames {i} relative to {i-1} at the home position
+	*  Glist: Spatial inertia matrices Gi of the links
+	*  Slist: Screw axes Si of the joints in a space frame, in the format
+	*         of a matrix with the screw axes as the columns.
+	* 
+	* Outputs:
+	*  taulist: The n-vector of required joint forces/torques
+	* 
+	*/
+	Eigen::VectorXd InverseDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& ddthetalist, 
+									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd> Mlist, 
+									std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+	    // the size of the lists
+		int n = thetalist.size();
+	
+		Eigen::MatrixXd Mi = Eigen::MatrixXd::Identity(4, 4);
+		Eigen::MatrixXd Ai = Eigen::MatrixXd::Zero(6,n);
+		std::vector<Eigen::MatrixXd> AdTi;
+		for (int i = 0; i < n+1; i++) {
+			AdTi.push_back(Eigen::MatrixXd::Zero(6,6));
+		}
+		Eigen::MatrixXd Vi = Eigen::MatrixXd::Zero(6,n+1);    // velocity
+		Eigen::MatrixXd Vdi = Eigen::MatrixXd::Zero(6,n+1);   // acceleration
+
+		Vdi.block(3, 0, 3, 1) = - g;
+		AdTi[n] = mr::Adjoint(mr::TransInv(Mlist[n]));
+		Eigen::VectorXd Fi = Ftip;
+
+		Eigen::VectorXd taulist = Eigen::VectorXd::Zero(n);
+
+		// forward pass
+		for (int i = 0; i < n; i++) {
+			Mi = Mi * Mlist[i];
+			Ai.col(i) = mr::Adjoint(mr::TransInv(Mi))*Slist.col(i);
+		
+			AdTi[i] = mr::Adjoint(mr::MatrixExp6(mr::VecTose3(Ai.col(i)*-thetalist(i)))
+			          * mr::TransInv(Mlist[i]));
+
+			Vi.col(i+1) = AdTi[i] * Vi.col(i) + Ai.col(i) * dthetalist(i);
+			Vdi.col(i+1) = AdTi[i] * Vdi.col(i) + Ai.col(i) * ddthetalist(i) 
+						   + ad(Vi.col(i+1)) * Ai.col(i) * dthetalist(i); // this index is different from book!
+		}
+
+		// backward pass
+		for (int i = n-1; i >= 0; i--) {
+			Fi = AdTi[i+1].transpose() * Fi + Glist[i] * Vdi.col(i+1) 
+			     - ad(Vi.col(i+1)).transpose() * (Glist[i] * Vi.col(i+1));
+			taulist(i) = Fi.transpose() * Ai.col(i);
+		}
+		return taulist;
 	}
 }

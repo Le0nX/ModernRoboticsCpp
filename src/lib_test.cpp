@@ -179,8 +179,8 @@ TEST(MRTest, FKInSpaceTest)
 TEST(MRTest, AxisAng6Test) {
 	Eigen::VectorXd input(6);
 	Eigen::VectorXd result(7);
-	input << 1.0, 0.0, 0.0, 1.0, 1.0, 2.0, 3.0;
-	result << 1.0, 0.0, 0.0, 1.0, 1.0, 2.0, 3.0, 1.0;
+	input << 1.0, 0.0, 0.0, 1.0, 2.0, 3.0;
+	result << 1.0, 0.0, 0.0, 1.0, 2.0, 3.0, 1.0;
 
 	Eigen::VectorXd output = mr::AxisAng6(input);
 	ASSERT_TRUE(output.isApprox(result, 4));
@@ -209,7 +209,7 @@ TEST(MRTest, DistanceToSO3Test) {
 	input << 1.0, 0.0, 0.0,
 		0.0, 0.1, -0.95,
 		0.0, 1.0, 0.1;
-	ASSERT_DOUBLE_EQ(result, mr::DistanceToSO3(input));
+	EXPECT_NEAR(result, mr::DistanceToSO3(input),3);
 }
 
 TEST(MRTest, DistanceToSE3Test) {
@@ -219,7 +219,7 @@ TEST(MRTest, DistanceToSE3Test) {
 		0.0, 0.1, -0.95, 1.5,
 		0.0, 1.0, 0.1, -0.9,
 		0.0, 0.0, 0.1, 0.98;
-	ASSERT_DOUBLE_EQ(result, mr::DistanceToSE3(input));
+	EXPECT_NEAR(result, mr::DistanceToSE3(input),3);
 }
 
 TEST(MRTest, TestIfSO3Test) {
@@ -295,4 +295,89 @@ TEST(MRTest, IKinSpaceTest) {
 	bool iRet = mr::IKinSpace(Slist, M, T, thetalist, eomg, ev);
 	ASSERT_EQ(b_result, iRet);
 	ASSERT_TRUE(thetalist.isApprox(theta_result, 4));
+}
+
+TEST(MRTest, AdjointTest) {
+    Eigen::Matrix4d T;
+    T << 1, 0, 0, 0,
+         0, 0, -1, 0,
+         0, 1, 0, 3,
+       0, 0, 0, 1;
+    Eigen::MatrixXd result(6,6);
+    result << 
+    1,     0,     0,     0,     0,     0,
+    0,     0,    -1,     0,     0,     0,
+    0,     1,     0,     0,     0,     0,
+    0,     0,     3,     1,     0,     0,
+    3,     0,     0,     0,     0,    -1,
+    0,     0,     0,     0,     1,     0;
+
+    ASSERT_TRUE(mr::Adjoint(T).isApprox(result, 4));
+}
+
+TEST(MRTest, InverseDynamicsTest) {
+  Eigen::VectorXd thetalist(3);
+  thetalist << 0.1, 0.1, 0.1;
+  Eigen::VectorXd dthetalist(3);
+  dthetalist << 0.1, 0.2, 0.3;
+  Eigen::VectorXd ddthetalist(3);
+  ddthetalist << 2, 1.5, 1;
+  Eigen::VectorXd g(3);
+  g << 0, 0, -9.8;
+  Eigen::VectorXd Ftip(6);
+  Ftip << 1, 1, 1, 1, 1, 1;
+
+  std::vector<Eigen::MatrixXd> Mlist;
+  std::vector<Eigen::MatrixXd> Glist;
+
+  Eigen::Matrix4d M01;
+	M01 << 1, 0, 0, 0,
+		     0, 1, 0, 0,
+		     0, 0, 1, 0.089159,
+		     0, 0, 0, 1;
+  Eigen::Matrix4d M12;
+	M12 << 0, 0, 1, 0.28,
+		     0, 1, 0, 0.13585,
+		     -1, 0 ,0, 0,
+		     0, 0, 0, 1;
+  Eigen::Matrix4d M23;
+	M23 << 1, 0, 0, 0,
+		     0, 1, 0, -0.1197,
+		     0, 0, 1, 0.395,
+		     0, 0, 0, 1;
+  Eigen::Matrix4d M34;
+	M34 << 1, 0, 0, 0,
+		     0, 1, 0, 0,
+		     0, 0, 1, 0.14225,
+		     0, 0, 0, 1;
+
+  Mlist.push_back(M01);
+  Mlist.push_back(M12);
+  Mlist.push_back(M23);
+  Mlist.push_back(M34);
+  
+  Eigen::VectorXd G1(6);
+  G1 << 0.010267, 0.010267, 0.00666, 3.7, 3.7, 3.7;
+  Eigen::VectorXd G2(6);
+  G2 << 0.22689, 0.22689, 0.0151074, 8.393, 8.393, 8.393;
+  Eigen::VectorXd G3(6);
+  G3 << 0.0494433, 0.0494433, 0.004095, 2.275, 2.275, 2.275;
+
+  Glist.push_back(G1.asDiagonal());
+  Glist.push_back(G2.asDiagonal());
+  Glist.push_back(G3.asDiagonal());
+  
+	Eigen::MatrixXd SlistT(3, 6);
+	SlistT << 1, 0, 1,      0, 1,     0, 
+            0, 1, 0, -0.089, 0,     0, 
+            0, 1, 0, -0.089, 0, 0.425;
+	Eigen::MatrixXd Slist = SlistT.transpose();
+
+  Eigen::VectorXd taulist = mr::InverseDynamics(thetalist, dthetalist, ddthetalist, g, 
+                                                Ftip, Mlist, Glist, Slist);
+                 
+	Eigen::VectorXd result(3);
+	result << 74.6962, -33.0677, -3.23057;
+
+  ASSERT_TRUE(taulist.isApprox(result, 4));
 }
