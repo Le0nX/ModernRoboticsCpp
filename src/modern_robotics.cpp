@@ -513,4 +513,13 @@ namespace mr {
 		}
 		return M;
 	}
+	Eigen::VectorXd VelQuadraticForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const std::vector<Eigen::MatrixXd>& Mlist,
+		const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+		int n = thetalist.size();
+		Eigen::VectorXd ddthetalist = Eigen::VectorXd::Zero(n);
+		Eigen::VectorXd g(3); g << 0, 0, 0;
+		Eigen::VectorXd Ftip(6); Ftip << 0, 0, 0, 0, 0, 0;
+		Eigen::VectorXd vqForces = InverseDynamics(thetalist, dthetalist, ddthetalist, g, Ftip, Mlist, Glist, Slist);
+		return vqForces;
+	}
 }

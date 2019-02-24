@@ -380,4 +380,22 @@ Eigen::VectorXd InverseDynamics(const Eigen::VectorXd&, const Eigen::VectorXd&, 
 Eigen::MatrixXd MassMatrix(const Eigen::VectorXd&, const std::vector<Eigen::MatrixXd>&, const std::vector<Eigen::MatrixXd>&, const Eigen::MatrixXd&);
 
 
+/*
+ * Function: Computes the Coriolis and centripetal terms in the inverse dynamics of an open chain robot
+ * Inputs:
+ *	thetalist: A list of joint variables
+ *	dthetalist: A list of joint rates
+ *  Mlist: List of link frames i relative to i-1 at the home position
+ *	Glist: Spatial inertia matrices Gi of the links
+ *	Slist: Screw axes Si of the joints in a space frame, in the format
+ *         of a matrix with axes as the columns
+ * Outputs:
+ *	vqForces: The vector c(thetalist,dthetalist) of Coriolis and centripetal
+ *			  terms for a given thetalist and dthetalist
+ * Notes:
+ *	This function calls InverseDynamics with g = 0, Ftip = 0, and
+*   ddthetalist = 0.
+ */
+Eigen::VectorXd VelQuadraticForces(const Eigen::VectorXd&, const Eigen::VectorXd&, const std::vector<Eigen::MatrixXd>&,
+	const std::vector<Eigen::MatrixXd>&, const Eigen::MatrixXd&);
 }
