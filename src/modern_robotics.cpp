@@ -205,6 +205,7 @@ namespace mr {
 	Eigen::MatrixXd Adjoint(const Eigen::MatrixXd& T) {
 		std::vector<Eigen::MatrixXd> R = TransToRp(T);
 		Eigen::MatrixXd ad_ret(6, 6);
+		ad_ret = Eigen::MatrixXd::Zero(6, 6);
 		Eigen::MatrixXd zeroes = Eigen::MatrixXd::Zero(3, 3);
 		ad_ret << R[0], zeroes,
 			VecToso3(R[1]) * R[0], R[0];
@@ -344,7 +345,8 @@ namespace mr {
 		auto rp = mr::TransToRp(transform);
 		auto Rt = rp.at(0).transpose();
 		auto t = -(Rt * rp.at(1));
-		Eigen::MatrixXd inv = Eigen::MatrixXd::Zero(4, 4);
+		Eigen::MatrixXd inv(4, 4);
+		inv = Eigen::MatrixXd::Zero(4,4);
 		inv.block(0, 0, 3, 3) = Rt;
 		inv.block(0, 3, 3, 1) = t;
 		inv(3, 3) = 1;
@@ -468,58 +470,215 @@ namespace mr {
 		return !err;
 	}
 
-	Eigen::VectorXd InverseDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& ddthetalist,
-		const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist,
-		const Eigen::MatrixXd& Slist) {
+	/* 
+	* Function: This function uses forward-backward Newton-Euler iterations to solve the 
+	* equation:
+	* taulist = Mlist(thetalist) * ddthetalist + c(thetalist, dthetalist) ...
+	*           + g(thetalist) + Jtr(thetalist) * Ftip
+	* Inputs:
+	*  thetalist: n-vector of joint variables
+	*  dthetalist: n-vector of joint rates
+	*  ddthetalist: n-vector of joint accelerations
+	*  g: Gravity vector g
+	*  Ftip: Spatial force applied by the end-effector expressed in frame {n+1}
+	*  Mlist: List of link frames {i} relative to {i-1} at the home position
+	*  Glist: Spatial inertia matrices Gi of the links
+	*  Slist: Screw axes Si of the joints in a space frame, in the format
+	*         of a matrix with the screw axes as the columns.
+	* 
+	* Outputs:
+	*  taulist: The n-vector of required joint forces/torques
+	* 
+	*/
+	Eigen::VectorXd InverseDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& ddthetalist, 
+									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd> Mlist, 
+									std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+	    // the size of the lists
 		int n = thetalist.size();
+	
 		Eigen::MatrixXd Mi = Eigen::MatrixXd::Identity(4, 4);
-		Eigen::MatrixXd Ai = Eigen::MatrixXd::Zero(6, n);
-		std::vector<Eigen::MatrixXd> AdTi(n + 1);
-		Eigen::MatrixXd Vi = Eigen::MatrixXd::Zero(6, n + 1);
-		Eigen::MatrixXd Vdi = Eigen::MatrixXd::Zero(6, n + 1);
-		Vdi.col(0) << 0, 0, 0, -g;
-		AdTi[n] = Adjoint(TransInv(Mlist[n]));
-		Eigen::VectorXd Fi = Ftip;
-		Eigen::VectorXd taulist = Eigen::VectorXd::Zero(n);
-		Eigen::MatrixXd Mt;
-
-		for (int i = 0; i < n; ++i) {
-			Mi *= Mlist[i];
-			Ai.col(i) = Adjoint(TransInv(Mi))*Slist.col(i);
-			Mt = VecTose3(Ai.col(i)* -1 * thetalist(i));
-			AdTi[i] = Adjoint(MatrixExp6(Mt)*TransInv(Mlist[i]));
-			Vi.col(i + 1) = AdTi[i] * Vi.col(i) + Ai.col(i)*dthetalist(i);
-			Vdi.col(i + 1) = AdTi[i] * Vdi.col(i) + Ai.col(i)*ddthetalist(i) + ad(Vi.col(i + 1))*Ai.col(i)*dthetalist(i);
+		Eigen::MatrixXd Ai = Eigen::MatrixXd::Zero(6,n);
+		std::vector<Eigen::MatrixXd> AdTi;
+		for (int i = 0; i < n+1; i++) {
+			AdTi.push_back(Eigen::MatrixXd::Zero(6,6));
 		}
-		for (int i = n - 1; i > -1; --i) {
-			Fi = AdTi[i + 1].transpose() * Fi + Glist[i] * Vdi.col(i + 1) - ad(Vi.col(i + 1)).transpose() *(Glist[i] * Vi.col(i + 1));
+		Eigen::MatrixXd Vi = Eigen::MatrixXd::Zero(6,n+1);    // velocity
+		Eigen::MatrixXd Vdi = Eigen::MatrixXd::Zero(6,n+1);   // acceleration
+
+		Vdi.block(3, 0, 3, 1) = - g;
+		AdTi[n] = mr::Adjoint(mr::TransInv(Mlist[n]));
+		Eigen::VectorXd Fi = Ftip;
+
+		Eigen::VectorXd taulist = Eigen::VectorXd::Zero(n);
+
+		// forward pass
+		for (int i = 0; i < n; i++) {
+			Mi = Mi * Mlist[i];
+			Ai.col(i) = mr::Adjoint(mr::TransInv(Mi))*Slist.col(i);
+		
+			AdTi[i] = mr::Adjoint(mr::MatrixExp6(mr::VecTose3(Ai.col(i)*-thetalist(i)))
+			          * mr::TransInv(Mlist[i]));
+
+			Vi.col(i+1) = AdTi[i] * Vi.col(i) + Ai.col(i) * dthetalist(i);
+			Vdi.col(i+1) = AdTi[i] * Vdi.col(i) + Ai.col(i) * ddthetalist(i) 
+						   + ad(Vi.col(i+1)) * Ai.col(i) * dthetalist(i); // this index is different from book!
+		}
+
+		// backward pass
+		for (int i = n-1; i >= 0; i--) {
+			Fi = AdTi[i+1].transpose() * Fi + Glist[i] * Vdi.col(i+1) 
+			     - ad(Vi.col(i+1)).transpose() * (Glist[i] * Vi.col(i+1));
 			taulist(i) = Fi.transpose() * Ai.col(i);
 		}
 		return taulist;
 	}
 
-	Eigen::MatrixXd MassMatrix(const Eigen::VectorXd& thetalist, const std::vector<Eigen::MatrixXd>& Mlist, 
-		const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+	/* 
+	 * Function: This function calls InverseDynamics with Ftip = 0, dthetalist = 0, and 
+	 *   ddthetalist = 0. The purpose is to calculate one important term in the dynamics equation       
+	 * Inputs:
+	 *  thetalist: n-vector of joint variables
+	 *  g: Gravity vector g
+	 *  Mlist: List of link frames {i} relative to {i-1} at the home position
+	 *  Glist: Spatial inertia matrices Gi of the links
+	 *  Slist: Screw axes Si of the joints in a space frame, in the format
+	 *         of a matrix with the screw axes as the columns.
+	 * 
+	 * Outputs:
+	 *  grav: The 3-vector showing the effect force of gravity to the dynamics
+	 * 
+	 */
+	Eigen::VectorXd GravityForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& g,
+									std::vector<Eigen::MatrixXd> Mlist, std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+	    int n = thetalist.size();
+		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
+		Eigen::VectorXd dummyForce = Eigen::VectorXd::Zero(6);
+		Eigen::VectorXd grav = mr::InverseDynamics(thetalist, dummylist, dummylist, g, 
+                                                dummyForce, Mlist, Glist, Slist);
+		return grav;
+	}
+
+	/* 
+  	 * Function: This function calls InverseDynamics n times, each time passing a 
+	 * ddthetalist vector with a single element equal to one and all other 
+	 * inputs set to zero. Each call of InverseDynamics generates a single 
+	 * column, and these columns are assembled to create the inertia matrix.       
+	 *
+	 * Inputs:
+	 *  thetalist: n-vector of joint variables
+	 *  Mlist: List of link frames {i} relative to {i-1} at the home position
+	 *  Glist: Spatial inertia matrices Gi of the links
+	 *  Slist: Screw axes Si of the joints in a space frame, in the format
+	 *         of a matrix with the screw axes as the columns.
+	 * 
+	 * Outputs:
+	 *  M: The numerical inertia matrix M(thetalist) of an n-joint serial
+	 *     chain at the given configuration thetalist.
+	 */
+	Eigen::MatrixXd MassMatrix(const Eigen::VectorXd& thetalist,
+                                std::vector<Eigen::MatrixXd> Mlist, std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
 		int n = thetalist.size();
-		Eigen::MatrixXd M = Eigen::MatrixXd::Zero(n, n);
-		Eigen::VectorXd dthetalist = Eigen::VectorXd::Zero(n);
-		Eigen::VectorXd ddthetalist;
-		Eigen::VectorXd g(3); g << 0, 0, 0;
-		Eigen::VectorXd Ftip(6); Ftip << 0, 0, 0, 0, 0, 0;
-		for (int i = 0; i < n; ++i) {
-			ddthetalist = Eigen::VectorXd::Zero(n);
+		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
+		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
+		Eigen::VectorXd dummyforce = Eigen::VectorXd::Zero(6);
+		Eigen::MatrixXd M = Eigen::MatrixXd::Zero(n,n);	
+		for (int i = 0; i < n; i++) {
+			Eigen::VectorXd ddthetalist = Eigen::VectorXd::Zero(n);
 			ddthetalist(i) = 1;
-			M.col(i) = InverseDynamics(thetalist, dthetalist, ddthetalist, g, Ftip, Mlist, Glist, Slist);
-		}
-		return M;
+			M.col(i) = mr::InverseDynamics(thetalist, dummylist, ddthetalist, 
+                             dummyg, dummyforce, Mlist, Glist, Slist);
+		}			
+		return M;		
 	}
-	Eigen::VectorXd VelQuadraticForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const std::vector<Eigen::MatrixXd>& Mlist,
-		const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
+
+	/* 
+  	 * Function: This function calls InverseDynamics with g = 0, Ftip = 0, and 
+     * ddthetalist = 0.      
+	 *
+	 * Inputs:
+	 *  thetalist: n-vector of joint variables
+	 *  dthetalist: A list of joint rates
+	 *  Mlist: List of link frames {i} relative to {i-1} at the home position
+	 *  Glist: Spatial inertia matrices Gi of the links
+	 *  Slist: Screw axes Si of the joints in a space frame, in the format
+	 *         of a matrix with the screw axes as the columns.
+	 * 
+	 * Outputs:
+	 *  c: The vector c(thetalist,dthetalist) of Coriolis and centripetal
+	 *     terms for a given thetalist and dthetalist.
+	 */
+	Eigen::VectorXd VelQuadraticForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist,
+                                std::vector<Eigen::MatrixXd> Mlist, std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
 		int n = thetalist.size();
-		Eigen::VectorXd ddthetalist = Eigen::VectorXd::Zero(n);
-		Eigen::VectorXd g(3); g << 0, 0, 0;
-		Eigen::VectorXd Ftip(6); Ftip << 0, 0, 0, 0, 0, 0;
-		Eigen::VectorXd vqForces = InverseDynamics(thetalist, dthetalist, ddthetalist, g, Ftip, Mlist, Glist, Slist);
-		return vqForces;
+		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
+		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
+		Eigen::VectorXd dummyforce = Eigen::VectorXd::Zero(6);
+		Eigen::VectorXd c = mr::InverseDynamics(thetalist, dthetalist, dummylist, 
+                             dummyg, dummyforce, Mlist, Glist, Slist);
+		return c;
 	}
+
+	/* 
+  	 * Function: This function calls InverseDynamics with g = 0, dthetalist = 0, and 
+     * ddthetalist = 0.  
+	 *
+	 * Inputs:
+	 *  thetalist: n-vector of joint variables 
+	 *  Ftip: Spatial force applied by the end-effector expressed in frame {n+1}
+	 *  Mlist: List of link frames {i} relative to {i-1} at the home position
+	 *  Glist: Spatial inertia matrices Gi of the links
+	 *  Slist: Screw axes Si of the joints in a space frame, in the format
+	 *         of a matrix with the screw axes as the columns.
+	 * 
+	 * Outputs:
+	 *  JTFtip: The joint forces and torques required only to create the 
+	 *     end-effector force Ftip.
+	 */
+	Eigen::VectorXd EndEffectorForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& Ftip, 
+								std::vector<Eigen::MatrixXd> Mlist, std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+		int n = thetalist.size();	
+		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
+		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
+
+		Eigen::VectorXd JTFtip = mr::InverseDynamics(thetalist, dummylist, dummylist, 
+                             dummyg, Ftip, Mlist, Glist, Slist);
+		return JTFtip;						
+	}
+
+	/* 
+	 * Function: This function computes ddthetalist by solving:
+	 * Mlist(thetalist) * ddthetalist = taulist - c(thetalist,dthetalist) 
+	 *                                  - g(thetalist) - Jtr(thetalist) * Ftip
+	 * Inputs:
+	 *  thetalist: n-vector of joint variables
+	 *  dthetalist: n-vector of joint rates
+	 *  taulist: An n-vector of joint forces/torques
+	 *  g: Gravity vector g
+	 *  Ftip: Spatial force applied by the end-effector expressed in frame {n+1}
+	 *  Mlist: List of link frames {i} relative to {i-1} at the home position
+	 *  Glist: Spatial inertia matrices Gi of the links
+	 *  Slist: Screw axes Si of the joints in a space frame, in the format
+	 *         of a matrix with the screw axes as the columns.
+	 * 
+	 * Outputs:
+	 *  ddthetalist: The resulting joint accelerations
+	 * 
+	 */
+	Eigen::VectorXd ForwardDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& taulist, 
+									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, std::vector<Eigen::MatrixXd> Mlist, 
+									std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+        
+		Eigen::VectorXd totalForce = taulist - mr::VelQuadraticForces(thetalist, dthetalist, Mlist, Glist, Slist) 
+                 							 - mr::GravityForces(thetalist, g, Mlist, Glist, Slist) 
+                                             - mr::EndEffectorForces(thetalist, Ftip, Mlist, Glist, Slist);
+		
+		Eigen::MatrixXd M = mr::MassMatrix(thetalist, Mlist, Glist, Slist);
+
+		// Use LDLT since M is positive definite
+        Eigen::VectorXd ddthetalist = M.ldlt().solve(totalForce);       
+
+		return ddthetalist;
+	}
+
+
 }
