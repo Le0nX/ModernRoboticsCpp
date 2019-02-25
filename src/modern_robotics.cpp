@@ -491,8 +491,8 @@ namespace mr {
 	* 
 	*/
 	Eigen::VectorXd InverseDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& ddthetalist, 
-									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd> Mlist, 
-									std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd>& Mlist, 
+									const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
 	    // the size of the lists
 		int n = thetalist.size();
 	
@@ -680,5 +680,24 @@ namespace mr {
 		return ddthetalist;
 	}
 
+	void EulerStep(Eigen::VectorXd& thetalist, Eigen::VectorXd& dthetalist, const Eigen::VectorXd& ddthetalist, double dt) {
+		thetalist += dthetalist * dt;
+		dthetalist += ddthetalist * dt;
+		return;
+	}
 
+	Eigen::VectorXd ComputedTorque(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& eint,
+		const Eigen::VectorXd& g, const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist,
+		const Eigen::MatrixXd& Slist, const Eigen::VectorXd& thetalistd, const Eigen::VectorXd& dthetalistd, const Eigen::VectorXd& ddthetalistd,
+		double Kp, double Ki, double Kd) {
+
+		Eigen::VectorXd e = thetalistd - thetalist;  // position err
+		Eigen::VectorXd tau_feedforward = MassMatrix(thetalist, Mlist, Glist, Slist)*(Kp*e + Ki * (eint + e) + Kd * (dthetalistd - dthetalist));
+
+		Eigen::VectorXd Ftip = Eigen::VectorXd::Zero(6);
+		Eigen::VectorXd tau_inversedyn = InverseDynamics(thetalist, dthetalist, ddthetalistd, g, Ftip, Mlist, Glist, Slist);
+
+		Eigen::VectorXd tau_computed = tau_feedforward + tau_inversedyn;
+		return tau_computed;
+	}
 }

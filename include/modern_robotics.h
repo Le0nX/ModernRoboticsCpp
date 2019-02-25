@@ -356,8 +356,8 @@ bool IKinSpace(const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::Matr
  * 
  */
 Eigen::VectorXd InverseDynamics(const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&, 
-                                   const Eigen::VectorXd&, const Eigen::VectorXd&, std::vector<Eigen::MatrixXd>, 
-                                   std::vector<Eigen::MatrixXd>, const Eigen::MatrixXd&);
+                                   const Eigen::VectorXd&, const Eigen::VectorXd&, const std::vector<Eigen::MatrixXd>&, 
+                                   const std::vector<Eigen::MatrixXd>&, const Eigen::MatrixXd&);
 
 /* 
  * Function: This function calls InverseDynamics with Ftip = 0, dthetalist = 0, and 
@@ -458,4 +458,46 @@ Eigen::VectorXd ForwardDynamics(const Eigen::VectorXd&, const Eigen::VectorXd&, 
                                    const Eigen::VectorXd&, const Eigen::VectorXd&, std::vector<Eigen::MatrixXd>, 
                                    std::vector<Eigen::MatrixXd>, const Eigen::MatrixXd&);
 
+
+/*
+ * Function: Compute the joint angles and velocities at the next timestep using
+    first order Euler integration
+ * Inputs:
+ *  thetalist[in]: n-vector of joint variables
+ *  dthetalist[in]: n-vector of joint rates
+ *	ddthetalist: n-vector of joint accelerations
+ *  dt: The timestep delta t
+ *
+ * Outputs:
+ *  thetalist[out]: Vector of joint variables after dt from first order Euler integration
+ *  dthetalist[out]: Vector of joint rates after dt from first order Euler integration
+ */
+void EulerStep(Eigen::VectorXd&, Eigen::VectorXd&, const Eigen::VectorXd&, double);
+
+
+/*
+ * Function: Compute the joint control torques at a particular time instant
+ * Inputs:
+ *  thetalist: n-vector of joint variables
+ *  dthetalist: n-vector of joint rates
+ *	eint: n-vector of the time-integral of joint errors
+ *	g: Gravity vector g
+ *  Mlist: List of link frames {i} relative to {i-1} at the home position
+ *  Glist: Spatial inertia matrices Gi of the links
+ *  Slist: Screw axes Si of the joints in a space frame, in the format
+ *         of a matrix with the screw axes as the columns.
+ *  thetalistd: n-vector of reference joint variables
+ *  dthetalistd: n-vector of reference joint rates
+ *  ddthetalistd: n-vector of reference joint accelerations
+ *	Kp: The feedback proportional gain (identical for each joint)
+ *	Ki: The feedback integral gain (identical for each joint)
+ *	Kd: The feedback derivative gain (identical for each joint)
+ *
+ * Outputs:
+ *  tau_computed: The vector of joint forces/torques computed by the feedback
+ *				  linearizing controller at the current instant
+ */
+Eigen::VectorXd ComputedTorque(const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&,
+	const Eigen::VectorXd&, const std::vector<Eigen::MatrixXd>&, const std::vector<Eigen::MatrixXd>&,
+	const Eigen::MatrixXd&, const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&, double, double, double);
 }
