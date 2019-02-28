@@ -549,7 +549,7 @@ namespace mr {
 	 * 
 	 */
 	Eigen::VectorXd GravityForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& g,
-									std::vector<Eigen::MatrixXd> Mlist, std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+									const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
 	    int n = thetalist.size();
 		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
 		Eigen::VectorXd dummyForce = Eigen::VectorXd::Zero(6);
@@ -576,7 +576,7 @@ namespace mr {
 	 *     chain at the given configuration thetalist.
 	 */
 	Eigen::MatrixXd MassMatrix(const Eigen::VectorXd& thetalist,
-                                std::vector<Eigen::MatrixXd> Mlist, std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+                                const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
 		int n = thetalist.size();
 		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
 		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
@@ -608,7 +608,7 @@ namespace mr {
 	 *     terms for a given thetalist and dthetalist.
 	 */
 	Eigen::VectorXd VelQuadraticForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist,
-                                std::vector<Eigen::MatrixXd> Mlist, std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+                                const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
 		int n = thetalist.size();
 		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
 		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
@@ -635,7 +635,7 @@ namespace mr {
 	 *     end-effector force Ftip.
 	 */
 	Eigen::VectorXd EndEffectorForces(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& Ftip, 
-								std::vector<Eigen::MatrixXd> Mlist, std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+								const std::vector<Eigen::MatrixXd>& Mlist, const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
 		int n = thetalist.size();	
 		Eigen::VectorXd dummylist = Eigen::VectorXd::Zero(n);
 		Eigen::VectorXd dummyg = Eigen::VectorXd::Zero(3);
@@ -665,8 +665,8 @@ namespace mr {
 	 * 
 	 */
 	Eigen::VectorXd ForwardDynamics(const Eigen::VectorXd& thetalist, const Eigen::VectorXd& dthetalist, const Eigen::VectorXd& taulist, 
-									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, std::vector<Eigen::MatrixXd> Mlist, 
-									std::vector<Eigen::MatrixXd> Glist, const Eigen::MatrixXd& Slist) {
+									const Eigen::VectorXd& g, const Eigen::VectorXd& Ftip, const std::vector<Eigen::MatrixXd>& Mlist, 
+									const std::vector<Eigen::MatrixXd>& Glist, const Eigen::MatrixXd& Slist) {
         
 		Eigen::VectorXd totalForce = taulist - mr::VelQuadraticForces(thetalist, dthetalist, Mlist, Glist, Slist) 
                  							 - mr::GravityForces(thetalist, g, Mlist, Glist, Slist) 
@@ -699,5 +699,69 @@ namespace mr {
 
 		Eigen::VectorXd tau_computed = tau_feedforward + tau_inversedyn;
 		return tau_computed;
+	}
+
+	double CubicTimeScaling(double Tf, double t) {
+		double timeratio = 1.0*t / Tf;
+		double st = 3 * pow(timeratio, 2) - 2 * pow(timeratio, 3);
+		return st;
+	}
+
+	double QuinticTimeScaling(double Tf, double t) {
+		double timeratio = 1.0*t / Tf;
+		double st = 10 * pow(timeratio, 3) - 15 * pow(timeratio, 4) + 6 * pow(timeratio, 5);
+		return st;
+	}
+
+	Eigen::MatrixXd JointTrajectory(const Eigen::VectorXd& thetastart, const Eigen::VectorXd& thetaend, double Tf, int N, int method) {
+		double timegap = Tf / (N - 1);
+		Eigen::MatrixXd trajT = Eigen::MatrixXd::Zero(thetastart.size(), N);
+		double st;
+		for (int i = 0; i < N; ++i) {
+			if (method == 3)
+				st = CubicTimeScaling(Tf, timegap*i);
+			else
+				st = QuinticTimeScaling(Tf, timegap*i);
+			trajT.col(i) = st * thetaend + (1 - st)*thetastart;
+		}
+		Eigen::MatrixXd traj = trajT.transpose();
+		return traj;
+	}
+	std::vector<Eigen::MatrixXd> ScrewTrajectory(const Eigen::MatrixXd& Xstart, const Eigen::MatrixXd& Xend, double Tf, int N, int method) {
+		double timegap = Tf / (N - 1);
+		std::vector<Eigen::MatrixXd> traj(N);
+		double st;
+		for (int i = 0; i < N; ++i) {
+			if (method == 3)
+				st = CubicTimeScaling(Tf, timegap*i);
+			else
+				st = QuinticTimeScaling(Tf, timegap*i);
+			Eigen::MatrixXd Ttemp = MatrixLog6(TransInv(Xstart)*Xend);
+			traj.at(i) = Xstart * MatrixExp6(Ttemp*st);
+		}
+		return traj;
+	}
+
+	std::vector<Eigen::MatrixXd> CartesianTrajectory(const Eigen::MatrixXd& Xstart, const Eigen::MatrixXd& Xend, double Tf, int N, int method) {
+		double timegap = Tf / (N - 1);
+		std::vector<Eigen::MatrixXd> traj(N);
+		std::vector<Eigen::MatrixXd> Rpstart = TransToRp(Xstart);
+		std::vector<Eigen::MatrixXd> Rpend = TransToRp(Xend);
+		Eigen::Matrix3d Rstart = Rpstart[0]; Eigen::Vector3d pstart = Rpstart[1];
+		Eigen::Matrix3d Rend = Rpend[0]; Eigen::Vector3d pend = Rpend[1];
+		double st;
+		for (int i = 0; i < N; ++i) {
+			if (method == 3)
+				st = CubicTimeScaling(Tf, timegap*i);
+			else
+				st = QuinticTimeScaling(Tf, timegap*i);
+			Eigen::Matrix3d Ri = Rstart * MatrixExp3(MatrixLog3(Rstart.transpose() * Rend)*st);
+			Eigen::Vector3d pi = st*pend + (1 - st)*pstart;
+			Eigen::MatrixXd traji(4, 4);
+			traji << Ri, pi,
+				0, 0, 0, 1;
+			traj.at(i) = traji;
+		}
+		return traj;
 	}
 }
