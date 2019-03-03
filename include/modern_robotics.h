@@ -646,6 +646,36 @@ std::vector<Eigen::MatrixXd> ScrewTrajectory(const Eigen::MatrixXd&, const Eigen
 std::vector<Eigen::MatrixXd> CartesianTrajectory(const Eigen::MatrixXd&, const Eigen::MatrixXd&, double, int, int);
 
 
+/*
+ * Function: Compute the motion of a serial chain given an open-loop history of joint forces/torques
+ * Inputs:
+ *  thetalist: n-vector of initial joint variables
+ *  dthetalist: n-vector of initial joint rates
+ *	g: Gravity vector g
+ *	Ftipmat: An N x 6 matrix of spatial forces applied by the end-effector (if there are no tip forces
+ *			 the user should input a zero matrix)
+ *  Mlist: List of link frames {i} relative to {i-1} at the home position
+ *  Glist: Spatial inertia matrices Gi of the links
+ *  Slist: Screw axes Si of the joints in a space frame, in the format
+ *         of a matrix with the screw axes as the columns.
+ *  thetamatd: An Nxn matrix of desired joint variables from the reference trajectory
+ *  dthetamatd: An Nxn matrix of desired joint velocities
+ *  ddthetamatd: An Nxn matrix of desired joint accelerations
+ *	gtilde: The gravity vector based on the model of the actual robot (actual values given above)
+ *  Mtildelist: The link frame locations based on the model of the actual robot (actual values given above)
+ *  Gtildelist: The link spatial inertias based on the model of the actual robot (actual values given above)
+ *	Kp: The feedback proportional gain (identical for each joint)
+ *	Ki: The feedback integral gain (identical for each joint)
+ *	Kd: The feedback derivative gain (identical for each joint)
+ *	dt: The timestep between points on the reference trajectory
+ *	intRes: Integration resolution is the number of times integration (Euler) takes places between each time step.
+ *			Must be an integer value greater than or equal to 1
+ *
+ * Outputs: std::vector of [taumat, thetamat]
+ *  taumat: An Nxn matrix of the controllers commanded joint forces/ torques, where each row of n forces/torques
+ *			  corresponds to a single time instant
+ *  thetamat: The N x n matrix of actual joint angles
+ */
 std::vector<Eigen::MatrixXd> SimulateControl(const Eigen::VectorXd&, const Eigen::VectorXd&, const Eigen::VectorXd&,
 	const Eigen::MatrixXd&, const std::vector<Eigen::MatrixXd>&, const std::vector<Eigen::MatrixXd>&,
 	const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::MatrixXd&, const Eigen::MatrixXd&,
