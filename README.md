@@ -17,36 +17,54 @@ Each function has a commented section above it explaining the inputs required fo
 
 The primary purpose of the provided software is to be easy to read and educational, reinforcing the concepts in the book. The code is optimized neither for efficiency nor robustness.
 
-## Installation
+## Installation 
 
-### 1. Install Eigen library.
-* On Mac
-```console
-foo@bar:~$ brew install eigen
-```
-* On Linux
+### 1. Install Software
+* Eigen Library: On Linux and Mac
 ```console
 foo@bar:~$ sudo apt-get install libeigen3-dev
 ```
+* Eigen Libray: Mac
+```console
+foo@bar:~$ brew install eigen
+```
 
-### 2. Prepare build
+* cmake: On Linux
+```console
+foo@bar:~$ sudo apt-get install cmake
+```
 ```console
 foo@bar:~$ mkdir build && cd build
 ```
 
-By default cmake will install our build into the system directories.
-To define a custom install directory we simply pass it to cmake:
+### 2. Download Repo
+* Download Repo:
 ```console
-foo@bar:build $ cmake .. -DCMAKE_INSTALL_PREFIX=../_install
+foo@bar:~$ 
 ```
+* Extract Repo:
+```console
+foo@bar:~$ sudo unzip 
+```
+
+### 3. Prepare build
+```console
+foo@bar:~$ mkdir build && cd build
+```
+
 Or just configure with defaults
 ```console
 foo@bar:build $ cmake ..
 ```
-Building and installing library
+Building library
 ```console
-foo@bar:build $ make all && make install
+foo@bar:build $ sudo make
 ```
+Installing library
+```console
+foo@bar:build $ sudo make install
+```
+
 
 ## Testing the library
 ```console
